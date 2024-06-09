@@ -11,31 +11,32 @@ const COLLECTION_SCHEMA = Joi.object({
   email: Joi.string().email().required(),
   password: Joi.string().required(),
   role: Joi.string().valid('admin', 'seller', 'customer').default('customer'),
-  sdt: Joi.string().pattern(/^[0-9]{10,11}$/).required(), // Assumes Vietnamese phone number format
+  sdt: Joi.string().pattern(/^[0-9]{10,11}$/).required(),
   address: Joi.string().required(),
   createdAt: Joi.date().default(() => new Date()),
-  updatedAt: Joi.date().default(() => new Date())
+  updatedAt: Joi.date().default(() => new Date()),
+  refreshToken: Joi.string().allow('').optional() // Allow empty string and make it optional
 }).options({ abortEarly: false });
 
 const insertUser = async (userData) => {
-    try {
-      const validation = COLLECTION_SCHEMA.validate(userData);
-      if (validation.error) {
-        throw new Error(validation.error.details.map(detail => detail.message).join(', '));
-      }
-      const db = getDB();
-      const result = await db.collection(COLLECTION_NAME).insertOne(userData);
-      return result.insertedId; // Trả về ID của người dùng mới được chèn vào
-    } catch (error) {
-      console.error("Error in insertUser: ", error);
-      throw error;
+  try {
+    const validation = COLLECTION_SCHEMA.validate(userData);
+    if (validation.error) {
+      throw new Error(validation.error.details.map(detail => detail.message).join(', '));
     }
-  };
+    const db = getDB();
+    const result = await db.collection(COLLECTION_NAME).insertOne(userData);
+    return result.insertedId;
+  } catch (error) {
+    console.error("Error in insertUser: ", error);
+    throw error;
+  }
+};
 
 const getUserById = async (userId) => {
   try {
     const db = getDB();
-    return await db.collection(COLLECTION_NAME).findOne({ _id: ObjectId(userId) });
+    return await db.collection(COLLECTION_NAME).findOne({ _id: new ObjectId(userId) });
   } catch (error) {
     console.error("Error in getUserById: ", error);
   }
@@ -63,7 +64,7 @@ const updateUserById = async (userId, updateData) => {
   try {
     const db = getDB();
     await db.collection(COLLECTION_NAME).updateOne(
-      { _id: ObjectId(userId) },
+      { _id: new ObjectId(userId) },
       { $set: { ...updateData, updatedAt: new Date() } }
     );
   } catch (error) {

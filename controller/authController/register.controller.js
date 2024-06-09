@@ -18,11 +18,12 @@ async function registerUser(request, response) {
             age,
             email,
             password: hashedPassword,
-            role: 'customer', // Role mặc định là customer
+            role: 'customer', // Default role is 'customer'
             sdt,
             address,
             createdAt: new Date(),
-            updatedAt: new Date()
+            updatedAt: new Date(),
+            refreshToken: '', // Initialize refresh token as empty string
         };
 
         await UserModel.insertUser(newUser);
