@@ -5,9 +5,8 @@ const { connectDB } = require('./config/mongoDB');
 const cookiesParser = require('cookie-parser');
 const { app, server } = require('./socket/index');
 const authRoute = require('./routes/auth.route');
-const userRoute = require('./routes/user.route');
+// const userRoute = require('./routes/user.route');
 
-// Danh sách các origin được phép truy cập
 const whiteList = process.env.WHITE_LIST.split(',');
 
 const corsOptions = {
@@ -21,7 +20,6 @@ const corsOptions = {
   credentials: true,
 };
 
-// Sử dụng CORS với các tùy chọn
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookiesParser());
