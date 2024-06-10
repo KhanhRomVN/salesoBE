@@ -5,8 +5,9 @@ const { connectDB } = require('./config/mongoDB');
 const cookiesParser = require('cookie-parser');
 const { app, server } = require('./socket/index');
 const authRoute = require('./routes/auth.route');
-// const userRoute = require('./routes/user.route');
-
+const userRoute = require('./routes/user.route');
+const productRoute = require('./routes/product.route')
+const adminRoute = require('./routes/admin.route')
 const whiteList = process.env.WHITE_LIST.split(',');
 
 const corsOptions = {
@@ -33,7 +34,9 @@ app.get('/', (req, res) => {
 });
 
 app.use('/auth', authRoute);
-// app.use('/user', userRoute);
+app.use('/product', productRoute);
+app.use('/user', userRoute);
+app.use('/admin', adminRoute);
 
 connectDB().then(() => {
   server.listen(PORT, () => {

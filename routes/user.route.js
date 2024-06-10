@@ -1,13 +1,10 @@
-// const express = require('express')
-// const userDetails = require('../controller/userController/userDetails')
-// const updateUserDetails = require('../controller/userController/updateUserDetails')
-// const searchUser = require('../controller/userController/searchUser')
+const express = require('express');
+const authToken = require('../middleware/authToken');
+const userController = require('../controller/user.controller');
 
-// const router = express.Router()
+const router = express.Router();
 
-// router.get('/user-details',userDetails)
-// router.post('/update-user',updateUserDetails)
-// router.post("/search-user",searchUser)
+router.post('/updates', authToken, userController.updateS);
+router.post('/update-role', authToken, userController.updateRole);
 
-
-// module.exports = router
+module.exports = router;

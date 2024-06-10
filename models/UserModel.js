@@ -15,20 +15,50 @@ const COLLECTION_SCHEMA = Joi.object({
   address: Joi.string().required(),
   createdAt: Joi.date().default(() => new Date()),
   updatedAt: Joi.date().default(() => new Date()),
-  refreshToken: Joi.string().allow('').optional() // Allow empty string and make it optional
+  refreshToken: Joi.string().allow('').optional()
 }).options({ abortEarly: false });
+
+const validateUser = (userData) => {
+  const validation = COLLECTION_SCHEMA.validate(userData);
+  if (validation.error) {
+    throw new Error(validation.error.details.map(detail => detail.message).join(', '));
+  }
+};
 
 const insertUser = async (userData) => {
   try {
-    const validation = COLLECTION_SCHEMA.validate(userData);
-    if (validation.error) {
-      throw new Error(validation.error.details.map(detail => detail.message).join(', '));
-    }
+    validateUser(userData);
     const db = getDB();
     const result = await db.collection(COLLECTION_NAME).insertOne(userData);
     return result.insertedId;
   } catch (error) {
     console.error("Error in insertUser: ", error);
+    throw error;
+  }
+};
+
+const updateRole = async (userId) => {
+  try {
+    const db = getDB();
+    await db.collection(COLLECTION_NAME).updateOne(
+      { _id: new ObjectId(userId) },
+      { $set: { role: 'seller' } }
+    );
+  } catch (error) {
+    console.error("Error in updateRole: ", error);
+    throw error;
+  }
+};
+
+const updateUserFields = async (userId, updateFields) => {
+  try {
+    const db = getDB();
+    await db.collection(COLLECTION_NAME).updateOne(
+      { _id: new ObjectId(userId) },
+      { $set: updateFields, $currentDate: { updatedAt: true } }
+    );
+  } catch (error) {
+    console.error("Error in updateUserFields: ", error);
     throw error;
   }
 };
@@ -60,46 +90,10 @@ const getUserByEmail = async (email) => {
   }
 };
 
-const updateUserById = async (userId, updateData) => {
-  try {
-    const db = getDB();
-    await db.collection(COLLECTION_NAME).updateOne(
-      { _id: new ObjectId(userId) },
-      { $set: { ...updateData, updatedAt: new Date() } }
-    );
-  } catch (error) {
-    console.error("Error in updateUserById: ", error);
-  }
-};
-
-const updateUserByUsername = async (username, updateData) => {
-  try {
-    const db = getDB();
-    await db.collection(COLLECTION_NAME).updateOne(
-      { username },
-      { $set: { ...updateData, updatedAt: new Date() } }
-    );
-  } catch (error) {
-    console.error("Error in updateUserByUsername: ", error);
-  }
-};
-
-const updateUserByEmail = async (email, updateData) => {
-  try {
-    const db = getDB();
-    await db.collection(COLLECTION_NAME).updateOne(
-      { email },
-      { $set: { ...updateData, updatedAt: new Date() } }
-    );
-  } catch (error) {
-    console.error("Error in updateUserByEmail: ", error);
-  }
-};
-
 const deleteUserById = async (userId) => {
   try {
     const db = getDB();
-    await db.collection(COLLECTION_NAME).deleteOne({ _id: ObjectId(userId) });
+    await db.collection(COLLECTION_NAME).deleteOne({ _id: new ObjectId(userId) });
   } catch (error) {
     console.error("Error in deleteUserById: ", error);
   }
@@ -126,33 +120,23 @@ const getAllUsers = async () => {
 const getUsersByIds = async (userIds) => {
   try {
     const db = getDB();
-    const objectIds = userIds.map(id => ObjectId(id));
+    const objectIds = userIds.map(id => new ObjectId(id));
     return await db.collection(COLLECTION_NAME).find({ _id: { $in: objectIds } }).toArray();
   } catch (error) {
     console.error("Error in getUsersByIds: ", error);
   }
 };
 
-const updateUsersByIds = async (userIds, updateData) => {
+const updateRefreshToken = async (userId, refreshToken) => {
   try {
     const db = getDB();
-    const objectIds = userIds.map(id => ObjectId(id));
-    await db.collection(COLLECTION_NAME).updateMany(
-      { _id: { $in: objectIds } },
-      { $set: { ...updateData, updatedAt: new Date() } }
+    await db.collection(COLLECTION_NAME).updateOne(
+      { _id: new ObjectId(userId) },
+      { $set: { refreshToken }, $currentDate: { updatedAt: true } }
     );
   } catch (error) {
-    console.error("Error in updateUsersByIds: ", error);
-  }
-};
-
-const deleteUsersByIds = async (userIds) => {
-  try {
-    const db = getDB();
-    const objectIds = userIds.map(id => ObjectId(id));
-    await db.collection(COLLECTION_NAME).deleteMany({ _id: { $in: objectIds } });
-  } catch (error) {
-    console.error("Error in deleteUsersByIds: ", error);
+    console.error("Error in updateRefreshToken: ", error);
+    throw error;
   }
 };
 
@@ -161,13 +145,11 @@ module.exports = {
   getUserById,
   getUserByUsername,
   getUserByEmail,
-  updateUserById,
-  updateUserByUsername,
-  updateUserByEmail,
   deleteUserById,
   deleteUserByEmail,
   getAllUsers,
   getUsersByIds,
-  updateUsersByIds,
-  deleteUsersByIds
+  updateRole,
+  updateUserFields,
+  updateRefreshToken
 };

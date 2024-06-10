@@ -14,7 +14,6 @@ const authToken = async (req, res, next) => {
     }
 
     const user = await UserModel.getUserById(decoded.userId);
-    console.log(user);
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
