@@ -59,7 +59,6 @@ io.on('connection',async(socket)=>{
         socket.emit('message',getConversationMessage?.messages || [])
     })
 
-
     //new message
     socket.on('new message',async(data)=>{
 
@@ -112,7 +111,6 @@ io.on('connection',async(socket)=>{
         io.to(data?.receiver).emit('conversation',conversationReceiver)
     })
 
-
     //sidebar
     socket.on('sidebar',async(currentUserId)=>{
         console.log("current user",currentUserId)
@@ -123,6 +121,7 @@ io.on('connection',async(socket)=>{
         
     })
 
+    //seen
     socket.on('seen',async(msgByUserId)=>{
         
         let conversation = await ConversationModel.findOne({

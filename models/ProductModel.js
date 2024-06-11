@@ -1,7 +1,7 @@
 const { getDB } = require('../config/mongoDB');
 const Joi = require('joi');
 const { ObjectId } = require('mongodb');
-const slugify = require('slugify'); // Thư viện để tạo slug
+const slugify = require('slugify');
 
 const COLLECTION_NAME = 'products';
 const COLLECTION_SCHEMA = Joi.object({
