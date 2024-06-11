@@ -21,14 +21,21 @@ const io = new Server(server,{
 const onlineUser = new Set()
 
 io.on('connection',async(socket)=>{
+
     console.log('socket', socket);
 
     console.log("connect User ", socket.id)
+    io.emit('room', data => {
+        socket.join(data)
+        console.log(data)
+    })
 
     const token = socket.handshake.auth.token 
 
     //current user details 
     const user = await getUserDetailsFromToken(token)
+
+
 
     //create a room
     socket.join(user?._id.toString())
