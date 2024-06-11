@@ -14,7 +14,7 @@ const getChats = async (req, res) => {
 
         const chats = await ChatModel.getChatsByChatID(chat_id);
 
-        return res.status(200).json(chats);
+        return res.status(200).json({chats, chat_id});
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: 'Internal server error' });
