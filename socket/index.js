@@ -21,7 +21,7 @@ const io = new Server(server,{
 const onlineUser = new Set()
 
 io.on('connection',async(socket)=>{
-    console.log(socket);
+    console.log('socket', socket);
 
     console.log("connect User ", socket.id)
 
