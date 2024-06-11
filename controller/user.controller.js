@@ -33,7 +33,20 @@ const updateS = async (req, res) => {
     }
 };
 
+const getFriends = async (req, res) => {
+    const userId = req.user._id.toString();
+    try {
+        const friends = await UserModel.getFriends(userId);
+        res.status(200).json(friends);
+    } catch (error) {
+        console.error("Error in updateS: ", error);
+        res.status(500).send("Error updating user.");
+    }
+}
+
+
 module.exports = {
     updateRole,
-    updateS
+    updateS,
+    getFriends
 };

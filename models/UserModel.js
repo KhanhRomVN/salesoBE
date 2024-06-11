@@ -140,6 +140,29 @@ const updateRefreshToken = async (userId, refreshToken) => {
   }
 };
 
+const getFriends = async (userId) => {
+  try {
+    const db = getDB();
+    const user = await db.collection(COLLECTION_NAME).findOne({ _id: new ObjectId(userId) });
+    const friends = user.friends;
+    
+    // Tạo mảng chứa các promise để lấy dữ liệu từng người bạn và chỉ chọn các trường mong muốn
+    const friendDataPromises = friends.map(async (friendId) => {
+      const friendData = await db.collection(COLLECTION_NAME).findOne(
+        { _id: new ObjectId(friendId) }, 
+        { projection: { _id: 1, username: 1, name: 1 } } // chỉ chọn các trường mong muốn
+      );
+      return friendData;
+    });
+
+    const friendData = await Promise.all(friendDataPromises);
+    return friendData;
+  } catch (error) {
+    console.error("Error in getUserById: ", error);
+    throw error;
+  }
+}
+
 module.exports = {
   insertUser,
   getUserById,
@@ -151,5 +174,6 @@ module.exports = {
   getUsersByIds,
   updateRole,
   updateUserFields,
-  updateRefreshToken
+  updateRefreshToken,
+  getFriends
 };

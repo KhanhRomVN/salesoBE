@@ -6,5 +6,6 @@ const router = express.Router();
 
 router.post('/updates', authToken, userController.updateS);
 router.post('/update-role', authToken, userController.updateRole);
+router.post('/friends', authToken, userController.getFriends);
 
 module.exports = router;
