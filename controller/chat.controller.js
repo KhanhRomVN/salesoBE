@@ -1,4 +1,3 @@
-const UserModel = require('../models/UserModel');
 const ChatModel = require('../models/ChatModel');
 
 const getChats = async (req, res) => {

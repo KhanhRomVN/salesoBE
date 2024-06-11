@@ -2,7 +2,6 @@ const UserModel = require('../models/UserModel');
 
 const updateRole = async (req, res) => {
     const userId = req.user._id.toString();
-    console.log(userId);
     try {
         await UserModel.updateRole(userId);
         res.status(200).send("Role updated successfully.");

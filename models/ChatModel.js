@@ -49,7 +49,6 @@ const getChatID = async (userA, userB) => {
 
 const getChatsByChatID = async (chat_id) => {
     const db = getDB();
-    console.log(chat_id);
     const messages = await db.collection(MESSAGE_COLLECTION_NAME).find({ chatId: chat_id }).toArray();
     return messages;
 };
