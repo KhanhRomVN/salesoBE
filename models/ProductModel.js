@@ -5,11 +5,12 @@ const slugify = require('slugify');
 
 const COLLECTION_NAME = 'products';
 const COLLECTION_SCHEMA = Joi.object({
+    userId: Joi.string().required(),
     name: Joi.string().required(),
     type: Joi.string().required(),
     price: Joi.number().required(),
+    image: Joi.string().required(),
     discount: Joi.number().optional(),
-    userId: Joi.string().required(),
     slug: Joi.string().required(), 
     createdAt: Joi.date().default(() => new Date()),
     updatedAt: Joi.date().default(() => new Date()),

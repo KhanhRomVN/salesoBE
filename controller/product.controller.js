@@ -2,7 +2,7 @@ const UserModel = require('../models/UserModel');
 const ProductModel = require('../models/ProductModel');
 
 const addProduct = async (req, res) => {
-    const { name, type, price, discount } = req.body;
+    const { name, type, price, discount, image } = req.body;
     const userId = req.user._id.toString();
 
     try {
@@ -20,7 +20,8 @@ const addProduct = async (req, res) => {
             name,
             type,
             price,
-            discount
+            discount,
+            image
         };
 
         await ProductModel.addProduct(productData);
