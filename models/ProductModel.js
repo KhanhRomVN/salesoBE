@@ -40,9 +40,16 @@ const getProductsByType = async (type) => {
     return products;
 }
 
+const getProductsByProdId = async (prod_id) => {
+    const db = getDB();
+    const products = await db.collection(COLLECTION_NAME).find({ _id: new ObjectId(prod_id) }).toArray();
+    return products;
+}
+
 
 module.exports = {
     addProduct,
     getProductsByUserId,
-    getProductsByType
+    getProductsByType,
+    getProductsByProdId
 };

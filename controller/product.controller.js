@@ -56,8 +56,20 @@ const getProductsByUserId = async (req, res) => {
     }
 }
 
+const getProductsByProdId = async (req, res) => {
+    const { prod_id } = req.body
+    try {
+        const products = await ProductModel.getProductsByProdId(prod_id);
+        res.status(200).json({ products });
+    } catch (error) {
+        console.error("Error getting products by userId:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+}
+
 module.exports = {
     addProduct,
     getProductsByType,
-    getProductsByUserId
+    getProductsByUserId,
+    getProductsByProdId
 };
