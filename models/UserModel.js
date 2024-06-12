@@ -72,15 +72,6 @@ const getUserById = async (userId) => {
   }
 };
 
-const getUserByUsername = async (username) => {
-  try {
-    const db = getDB();
-    return await db.collection(COLLECTION_NAME).findOne({ username });
-  } catch (error) {
-    console.error("Error in getUserByUsername: ", error);
-  }
-};
-
 const getUserByEmail = async (email) => {
   try {
     const db = getDB();
@@ -99,15 +90,6 @@ const deleteUserById = async (userId) => {
   }
 };
 
-const deleteUserByEmail = async (email) => {
-  try {
-    const db = getDB();
-    await db.collection(COLLECTION_NAME).deleteOne({ email });
-  } catch (error) {
-    console.error("Error in deleteUserByEmail: ", error);
-  }
-};
-
 const getAllUsers = async () => {
   try {
     const db = getDB();
@@ -117,7 +99,7 @@ const getAllUsers = async () => {
   }
 };
 
-const getUsersByIds = async (userIds) => {
+const getUsersByArrayOfId = async (userIds) => {
   try {
     const db = getDB();
     const objectIds = userIds.map(id => new ObjectId(id));
@@ -140,7 +122,7 @@ const updateRefreshToken = async (userId, refreshToken) => {
   }
 };
 
-const getFriends = async (userId) => {
+const getListFriends = async (userId) => {
   try {
     const db = getDB();
     const user = await db.collection(COLLECTION_NAME).findOne({ _id: new ObjectId(userId) });
@@ -163,17 +145,55 @@ const getFriends = async (userId) => {
   }
 }
 
+const addFriend = async (userId, friendId) => {
+  try {
+    const db = getDB();
+    await db.collection(COLLECTION_NAME).updateOne(
+      { _id: new ObjectId(userId) },
+      { $addToSet: { friends: new ObjectId(friendId) } }
+    );
+  } catch (error) {
+    console.error("Error in addFriend: ", error);
+    throw error;
+  }
+};
+
+const delFriend = async (userId, friendId) => {
+  try {
+    const db = getDB();
+    await db.collection(COLLECTION_NAME).updateOne(
+      { _id: new ObjectId(userId) },
+      { $pull: { friends: new ObjectId(friendId) } }
+    );
+  } catch (error) {
+    console.error("Error in delFriend: ", error);
+    throw error;
+  }
+};
+
+const delUsersByArrayOfId = async (userIds) => {
+  try {
+    const db = getDB();
+    const objectIds = userIds.map(id => new ObjectId(id));
+    await db.collection(COLLECTION_NAME).deleteMany({ _id: { $in: objectIds } });
+  } catch (error) {
+    console.error("Error in delUsersByArrayOfId: ", error);
+    throw error;
+  }
+};
+
 module.exports = {
   insertUser,
   getUserById,
-  getUserByUsername,
   getUserByEmail,
   deleteUserById,
-  deleteUserByEmail,
   getAllUsers,
-  getUsersByIds,
+  getUsersByArrayOfId,
+  delUsersByArrayOfId,
   updateRole,
   updateUserFields,
   updateRefreshToken,
-  getFriends
+  getListFriends,
+  addFriend,
+  delFriend
 };

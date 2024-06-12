@@ -43,9 +43,35 @@ const getFriends = async (req, res) => {
     }
 }
 
+const addFriend = async (req, res) => {
+    const { friendId } = req.body;
+    const userId = req.user._id.toString();
+    try {
+      await UserModel.addFriend(userId, friendId);
+      res.status(200).send("Friend added successfully.");
+    } catch (error) {
+      console.error("Error in addFriend: ", error);
+      res.status(500).send("Error adding friend.");
+    }
+  };
+  
+  const delFriend = async (req, res) => {
+    const { friendId } = req.body;
+    const userId = req.user._id.toString();
+    try {
+      await UserModel.delFriend(userId, friendId);
+      res.status(200).send("Friend deleted successfully.");
+    } catch (error) {
+      console.error("Error in delFriend: ", error);
+      res.status(500).send("Error deleting friend.");
+    }
+  };
+
 
 module.exports = {
     updateRole,
-    updateS,
-    getFriends
+  updateS,
+  getFriends,
+  addFriend,
+  delFriend
 };

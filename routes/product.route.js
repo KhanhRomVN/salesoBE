@@ -1,6 +1,6 @@
 const express = require('express')
 const productController = require('../controller/product.controller')
-const authToken = require('../middleware/authToken')
+const { authToken } = require('../middleware/authToken')
 
 const router = express.Router()
 
