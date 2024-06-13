@@ -9,6 +9,7 @@ const userRoute = require('./routes/user.route');
 const productRoute = require('./routes/product.route')
 const adminRoute = require('./routes/admin.route')
 const chatRoute = require('./routes/chat.route')
+const cartRoute = require('./routes/cart.route')
 const whiteList = process.env.WHITE_LIST.split(',');
 
 const corsOptions = {
@@ -39,6 +40,7 @@ app.use('/product', productRoute);
 app.use('/user', userRoute);
 app.use('/admin', adminRoute);
 app.use('/chat', chatRoute);
+app.use('/cart', cartRoute);
 
 connectDB().then(() => {
   server.listen(PORT, () => {
