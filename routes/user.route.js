@@ -10,7 +10,7 @@ router.post('/update-role', authToken, userController.updateRole);
 router.post('/add-friend', authToken, userController.addFriend);
 router.post('/check-friend', authToken, userController.checkFriendStatus);
 router.post('/del-friend', authToken, userController.delFriend);
-router.post('/list-friend', authToken, userController.listFriend);
+router.post('/list-friend', authToken, userController.getListFriend);
 
 
 

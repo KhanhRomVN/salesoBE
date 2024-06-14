@@ -67,11 +67,19 @@ const updateUser = async (req, res) => {
   }
 };
 
-const listFriend = async (req, res) => {
+const getListFriend = async (req, res) => {
   const user_id = req.user._id.toString();
   try {
-    const friends = await UserModelDetail.getListFriends(user_id);
-    res.status(200).json({ friends });
+    const friend_idList = await UserModelDetail.getListFriends(user_id);
+    const friendDataList = [];
+    for (let i = 0; i < friend_idList.length; i++) {
+      const user_id = friend_idList[i];
+      if (user_id !== null) {
+        const friendData = await UserModel.getUserById(user_id);
+        friendDataList.push(friendData);
+      }
+    }
+    res.status(200).json({ friendDataList });
   } catch (error) {
     res.status(500).json({ message: "Error fetching friend list" });
   }
@@ -125,7 +133,7 @@ module.exports = {
   getUserDetail,
   updateUser,
   updateRole,
-  listFriend,
+  getListFriend,
   addFriend,
   delFriend,
   checkFriendStatus
