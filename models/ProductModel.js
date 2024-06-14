@@ -5,45 +5,71 @@ const slugify = require('slugify');
 
 const COLLECTION_NAME = 'products';
 const COLLECTION_SCHEMA = Joi.object({
-    userId: Joi.string().required(),
+    user_id: Joi.string().required(),
     name: Joi.string().required(),
-    type: Joi.string().required(),
-    price: Joi.number().required(),
-    image: Joi.string().required(),
-    discount: Joi.number().optional(),
     slug: Joi.string().required(), 
+    image: Joi.string().required(),
+    description: Joi.string().required(), 
+    price: Joi.number().required(),
+    category: Joi.string().required(),
+    inventory: Joi.number().required(),
+    units_sold: Joi.number().default(0),
+    is_active: Joi.string().valid('yes', 'no').default('yes'),
     createdAt: Joi.date().default(() => new Date()),
     updatedAt: Joi.date().default(() => new Date()),
 }).options({ abortEarly: false });
 
 const addProduct = async (productData) => {
-    const slug = slugify(productData.name, { lower: true });
-
-    const validatedProduct = await COLLECTION_SCHEMA.validateAsync({
-        ...productData,
-        slug
-    });
     const db = getDB();
-    const result = await db.collection(COLLECTION_NAME).insertOne(validatedProduct);
-    return result;
+
+    try {
+        const slug = slugify(productData.name, { lower: true });
+        const validatedProduct = await COLLECTION_SCHEMA.validateAsync({
+            ...productData,
+            slug
+        });
+
+        const result = await db.collection(COLLECTION_NAME).insertOne(validatedProduct);
+        return result;
+    } catch (error) {
+        console.error("Error in addProduct: ", error);
+        throw error;
+    }
 }
 
-const getProductsByUserId = async (userId) => {
+const getProductsByUserId = async (user_id) => {
     const db = getDB();
-    const products = await db.collection(COLLECTION_NAME).find({ userId: userId }).toArray();
+    try {
+        const products = await db.collection(COLLECTION_NAME).find({ user_id: user_id }).toArray();
     return products;
+    } catch (error) {
+        console.error("Error in getProductsByUserId: ", error);
+        throw error;
+    }
 }
 
-const getProductsByType = async (type) => {
+const getProductsByType = async (category) => {
     const db = getDB();
-    const products = await db.collection(COLLECTION_NAME).find({ type: type }).toArray();
-    return products;
+    try {
+        const products = await db.collection(COLLECTION_NAME).find({ category: category }).toArray();
+        return products;
+    } catch (error) {
+        console.error("Error in getProductsByType: ", error);
+        throw error;
+    }
+    
 }
 
-const getProductsByProdId = async (prod_id) => {
+const getProductByProdId = async (prod_id) => {
     const db = getDB();
-    const products = await db.collection(COLLECTION_NAME).find({ _id: new ObjectId(prod_id) }).toArray();
-    return products;
+    try {
+        const product = await db.collection(COLLECTION_NAME).findOne({ _id: new ObjectId(prod_id) });
+        return product;
+    } catch (error) {
+        console.error("Error in getProductByProdId: ", error);
+        throw error;
+    }
+    
 }
 
 
@@ -51,5 +77,5 @@ module.exports = {
     addProduct,
     getProductsByUserId,
     getProductsByType,
-    getProductsByProdId
+    getProductByProdId
 };

@@ -1,77 +1,96 @@
+const bcryptjs = require('bcryptjs');
 const UserModel = require('../models/UserModel');
+const UserModelDetail = require('../models/UserDetailModel');
+
+const updateUser = async (req, res) => {
+  const user_id = req.user._id.toString();
+  const {
+    username, email, password, name, age, gender, about,
+    phone_number, address, avatar_uri, background_uri
+  } = req.body;
+
+  const user = {};
+  if (username) user.username = username;
+  if (email) user.email = email;
+  if (password) user.password = password;
+
+  const userDetail = {};
+  if (name) userDetail.name = name;
+  if (age) userDetail.age = age;
+  if (gender) userDetail.gender = gender;
+  if (about) userDetail.about = about;
+  if (phone_number) userDetail.phone_number = phone_number;
+  if (address) userDetail.address = address;
+  if (avatar_uri) userDetail.avatar_uri = avatar_uri;
+  if (background_uri) userDetail.background_uri = background_uri;
+
+  try {
+    if (user.password) {
+      const hashedPassword = await bcryptjs.hash(password, 10);
+      if (Object.keys(user).length > 0) {
+        user.password = hashedPassword
+        await UserModel.updateUser(user_id, user);
+      }
+    }
+
+    if (Object.keys(userDetail).length > 0) {
+      await UserModelDetail.updateUser(user_id, userDetail);
+    }
+
+    res.status(200).json({ message: "User updated successfully" });
+  } catch (error) {
+    console.error("Error updating user: ", error);
+    res.status(500).json({ message: "Error updating user" });
+  }
+};
+
+const listFriend = async (req, res) => {
+  const user_id = req.user._id.toString();
+  try {
+    const friends = await UserModelDetail.getListFriends(user_id);
+    res.status(200).json({ friends });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching friend list" });
+  }
+};
 
 const updateRole = async (req, res) => {
-    const userId = req.user._id.toString();
-    try {
-        await UserModel.updateRole(userId);
-        res.status(200).send("Role updated successfully.");
-    } catch (error) {
-        console.error("Error in updateRole: ", error);
-        res.status(500).send("Error updating role.");
-    }
+  const user_id = req.user._id.toString();
+  try {
+    await UserModel.updateRole(user_id);
+    res.status(200).json({ message: "Update to seller successfully!" });
+  } catch (error) {
+    console.error("Error in updateRole: ", error);
+    res.status(500).json({ message: "Error updating role" });
+  }
 };
-
-const updateS = async (req, res) => {
-    const value = req.body;
-    const userId = req.user._id.toString();
-    const updateFields = {};
-
-    if (value.name) updateFields.name = value.name;
-    if (value.username) updateFields.username = value.username;
-    if (value.email) updateFields.email = value.email;
-    if (value.age) updateFields.age = value.age;
-    if (value.sdt) updateFields.sdt = value.sdt;
-    if (value.address) updateFields.address = value.address;
-
-    try {
-        await UserModel.updateUserFields(userId, updateFields);
-        res.status(200).send("User updated successfully.");
-    } catch (error) {
-        console.error("Error in updateS: ", error);
-        res.status(500).send("Error updating user.");
-    }
-};
-
-const getFriends = async (req, res) => {
-    const userId = req.user._id.toString();
-    try {
-        const friends = await UserModel.getFriends(userId);
-        res.status(200).json(friends);
-    } catch (error) {
-        console.error("Error in updateS: ", error);
-        res.status(500).send("Error updating user.");
-    }
-}
 
 const addFriend = async (req, res) => {
-    const { friendId } = req.body;
-    const userId = req.user._id.toString();
-    try {
-      await UserModel.addFriend(userId, friendId);
-      res.status(200).send("Friend added successfully.");
-    } catch (error) {
-      console.error("Error in addFriend: ", error);
-      res.status(500).send("Error adding friend.");
-    }
-  };
-  
-  const delFriend = async (req, res) => {
-    const { friendId } = req.body;
-    const userId = req.user._id.toString();
-    try {
-      await UserModel.delFriend(userId, friendId);
-      res.status(200).send("Friend deleted successfully.");
-    } catch (error) {
-      console.error("Error in delFriend: ", error);
-      res.status(500).send("Error deleting friend.");
-    }
-  };
+  const { friend_id } = req.body;
+  const user_id = req.user._id.toString();
+  try {
+    await UserModelDetail.addFriend(user_id, friend_id);
+    res.status(200).json({ message: "Friend added successfully!" });
+  } catch (error) {
+    res.status(500).json({ message: "Error adding friend." });
+  }
+};
 
+const delFriend = async (req, res) => {
+  const { friend_id } = req.body;
+  const user_id = req.user._id.toString();
+  try {
+    await UserModelDetail.delFriend(user_id, friend_id);
+    res.status(200).json({ message: "Friend deleted successfully!" });
+  } catch (error) {
+    res.status(500).json({ message: "Error deleting friend." });
+  }
+};
 
 module.exports = {
-    updateRole,
-  updateS,
-  getFriends,
+  updateUser,
+  updateRole,
+  listFriend,
   addFriend,
   delFriend
 };

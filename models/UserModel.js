@@ -6,16 +6,13 @@ const { getDB } = require('../config/mongoDB');
 const COLLECTION_NAME = 'users';
 const COLLECTION_SCHEMA = Joi.object({
   username: Joi.string().required(),
-  name: Joi.string().required(),
-  age: Joi.number().integer().min(0).required(),
   email: Joi.string().email().required(),
   password: Joi.string().required(),
   role: Joi.string().valid('admin', 'seller', 'customer').default('customer'),
-  sdt: Joi.string().pattern(/^[0-9]{10,11}$/).required(),
-  address: Joi.string().required(),
-  createdAt: Joi.date().default(() => new Date()),
-  updatedAt: Joi.date().default(() => new Date()),
-  refreshToken: Joi.string().allow('').optional()
+  register_at: Joi.date().required(),
+  last_login: Joi.date().default(() => new Date()),
+  update_at: Joi.date().default(() => new Date()),
+  refreshToken: Joi.string().default("")
 }).options({ abortEarly: false });
 
 const validateUser = (userData) => {
@@ -25,44 +22,20 @@ const validateUser = (userData) => {
   }
 };
 
-const insertUser = async (userData) => {
+/* Add */
+const addUser = async (userData) => {
   try {
     validateUser(userData);
     const db = getDB();
     const result = await db.collection(COLLECTION_NAME).insertOne(userData);
-    return result.insertedId;
+    return result.insertedId.toString()
   } catch (error) {
     console.error("Error in insertUser: ", error);
     throw error;
   }
 };
 
-const updateRole = async (userId) => {
-  try {
-    const db = getDB();
-    await db.collection(COLLECTION_NAME).updateOne(
-      { _id: new ObjectId(userId) },
-      { $set: { role: 'seller' } }
-    );
-  } catch (error) {
-    console.error("Error in updateRole: ", error);
-    throw error;
-  }
-};
-
-const updateUserFields = async (userId, updateFields) => {
-  try {
-    const db = getDB();
-    await db.collection(COLLECTION_NAME).updateOne(
-      { _id: new ObjectId(userId) },
-      { $set: updateFields, $currentDate: { updatedAt: true } }
-    );
-  } catch (error) {
-    console.error("Error in updateUserFields: ", error);
-    throw error;
-  }
-};
-
+/* Get */
 const getUserById = async (userId) => {
   try {
     const db = getDB();
@@ -81,12 +54,13 @@ const getUserByEmail = async (email) => {
   }
 };
 
-const deleteUserById = async (userId) => {
+const getUsersByArrayOfId = async (userIds) => {
   try {
     const db = getDB();
-    await db.collection(COLLECTION_NAME).deleteOne({ _id: new ObjectId(userId) });
+    const objectIds = userIds.map(id => new ObjectId(id));
+    return await db.collection(COLLECTION_NAME).find({ _id: { $in: objectIds } }).toArray();
   } catch (error) {
-    console.error("Error in deleteUserById: ", error);
+    console.error("Error in getUsersByIds: ", error);
   }
 };
 
@@ -99,13 +73,66 @@ const getAllUsers = async () => {
   }
 };
 
-const getUsersByArrayOfId = async (userIds) => {
+/* Update */
+const updateRole = async (userId) => {
   try {
     const db = getDB();
-    const objectIds = userIds.map(id => new ObjectId(id));
-    return await db.collection(COLLECTION_NAME).find({ _id: { $in: objectIds } }).toArray();
+    await db.collection(COLLECTION_NAME).updateOne(
+      { _id: new ObjectId(userId) },
+      { $set: { role: 'seller' } }
+    );
   } catch (error) {
-    console.error("Error in getUsersByIds: ", error);
+    console.error("Error in updateRole: ", error);
+    throw error;
+  }
+};
+
+const updateUser = async (user_id, userData) => {
+  try {
+    const db = getDB();
+    const updateData = {};
+
+    if (userData.username) {
+      // Check if the username already exists
+      const usernameExists = await db.collection(COLLECTION_NAME).findOne({
+        username: userData.username,
+        _id: { $ne: new ObjectId(user_id) } // exclude the current user
+      });
+      if (usernameExists) {
+        throw new Error("Username already exists");
+      }
+      updateData.username = userData.username;
+    }
+
+    if (userData.email) {
+      // Check if the email already exists
+      const emailExists = await db.collection(COLLECTION_NAME).findOne({
+        email: userData.email,
+        _id: { $ne: new ObjectId(user_id) } // exclude the current user
+      });
+      if (emailExists) {
+        throw new Error("Email already exists");
+      }
+      updateData.email = userData.email;
+    }
+
+    if (userData.password) {
+      updateData.password = userData.password;
+    }
+
+    updateData.update_at = new Date();
+
+    if (Object.keys(updateData).length === 0) {
+      throw new Error("No valid fields to update");
+    }
+
+    await db.collection(COLLECTION_NAME).updateOne(
+      { _id: new ObjectId(user_id) },
+      { $set: updateData }
+    );
+  } catch (error) {
+    console.error("Error in updateUser: ", error);
+    throw error;
   }
 };
 
@@ -114,7 +141,7 @@ const updateRefreshToken = async (userId, refreshToken) => {
     const db = getDB();
     await db.collection(COLLECTION_NAME).updateOne(
       { _id: new ObjectId(userId) },
-      { $set: { refreshToken }, $currentDate: { updatedAt: true } }
+      { $set: { refreshToken }, $currentDate: { last_login: true } }
     );
   } catch (error) {
     console.error("Error in updateRefreshToken: ", error);
@@ -122,58 +149,19 @@ const updateRefreshToken = async (userId, refreshToken) => {
   }
 };
 
-const getListFriends = async (userId) => {
+/* Del */
+const deleteUserById = async (userId) => {
   try {
     const db = getDB();
-    const user = await db.collection(COLLECTION_NAME).findOne({ _id: new ObjectId(userId) });
-    const friends = user.friends;
-    
-    // Tạo mảng chứa các promise để lấy dữ liệu từng người bạn và chỉ chọn các trường mong muốn
-    const friendDataPromises = friends.map(async (friendId) => {
-      const friendData = await db.collection(COLLECTION_NAME).findOne(
-        { _id: new ObjectId(friendId) }, 
-        { projection: { _id: 1, username: 1, name: 1 } } // chỉ chọn các trường mong muốn
-      );
-      return friendData;
-    });
-
-    const friendData = await Promise.all(friendDataPromises);
-    return friendData;
+    await db.collection(COLLECTION_NAME).deleteOne({ _id: new ObjectId(userId) });
   } catch (error) {
-    console.error("Error in getUserById: ", error);
-    throw error;
-  }
-}
-
-const addFriend = async (userId, friendId) => {
-  try {
-    const db = getDB();
-    await db.collection(COLLECTION_NAME).updateOne(
-      { _id: new ObjectId(userId) },
-      { $addToSet: { friends: new ObjectId(friendId) } }
-    );
-  } catch (error) {
-    console.error("Error in addFriend: ", error);
-    throw error;
-  }
-};
-
-const delFriend = async (userId, friendId) => {
-  try {
-    const db = getDB();
-    await db.collection(COLLECTION_NAME).updateOne(
-      { _id: new ObjectId(userId) },
-      { $pull: { friends: new ObjectId(friendId) } }
-    );
-  } catch (error) {
-    console.error("Error in delFriend: ", error);
-    throw error;
+    console.error("Error in deleteUserById: ", error);
   }
 };
 
 const delUsersByArrayOfId = async (userIds) => {
+  const db = getDB();
   try {
-    const db = getDB();
     const objectIds = userIds.map(id => new ObjectId(id));
     await db.collection(COLLECTION_NAME).deleteMany({ _id: { $in: objectIds } });
   } catch (error) {
@@ -182,8 +170,24 @@ const delUsersByArrayOfId = async (userIds) => {
   }
 };
 
+/* Other */
+const logoutUser = async (user_id, updateData) => {
+  const db = getDB(); 
+  try {
+    await db.collection('users').updateOne(
+      { _id: user_id },
+      { $set: updateData }
+    );
+  } catch (error) {
+    console.error('Error in UserModel.logoutUser:', error);
+    throw error;
+  }
+}
+
+
+ 
 module.exports = {
-  insertUser,
+  addUser,
   getUserById,
   getUserByEmail,
   deleteUserById,
@@ -191,9 +195,7 @@ module.exports = {
   getUsersByArrayOfId,
   delUsersByArrayOfId,
   updateRole,
-  updateUserFields,
   updateRefreshToken,
-  getListFriends,
-  addFriend,
-  delFriend
+  logoutUser,
+  updateUser
 };

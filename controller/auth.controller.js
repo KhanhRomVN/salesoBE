@@ -1,11 +1,11 @@
-const UserModel = require('../models/UserModel');
+const UserModel = require('../models/UserModel')
+const userDetailModel = require('../models/UserDetailModel')
 const bcryptjs = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const registerUser = async (req, res) => {
+  const { username, email, password, name, age, gender } = req.body;
     try {
-        const { username, name, age, email, password, sdt, address } = req.body;
-
         const existingUser = await UserModel.getUserByEmail(email);
         if (existingUser) {
             return res.status(400).json({ error: 'User already exists with this email' });
@@ -15,24 +15,25 @@ const registerUser = async (req, res) => {
 
         const newUser = {
             username,
-            name,
-            age,
             email,
             password: hashedPassword,
-            role: 'customer', // Default role is 'customer'
-            sdt,
-            address,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            refreshToken: '', // Initialize refresh token as empty string
+            role: 'customer', 
+            register_at: new Date()
         };
 
-        await UserModel.insertUser(newUser);
+        const user_id = await UserModel.addUser(newUser);
+
+        const newUserDetail = {
+          user_id,
+          name,
+          age,
+          gender,
+        }
+        await userDetailModel.addUserDetail(newUserDetail)
 
         res.status(201).json({ message: 'User registered successfully' });
     } catch (error) {
-        console.error('Error in registerUser:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: 'Register User Error' });
     }
 }
 
@@ -42,44 +43,39 @@ const loginUser = async (req, res) => {
 
     const user = await UserModel.getUserByEmail(email);
     if (!user) {
-      return res.status(401).json({ error: 'Invalid email or password' });
+      return res.status(401).json({ error: 'Invalid email' });
     }
 
     const isPasswordValid = await bcryptjs.compare(password, user.password);
     if (!isPasswordValid) {
-      return res.status(401).json({ error: 'Invalid email or password' });
+      return res.status(401).json({ error: 'Invalid password' });
     }
 
     const accessToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET_KEY, { expiresIn: '1d' });
     const refreshToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET_KEY, { expiresIn: '7d' });
-
     await UserModel.updateRefreshToken(user._id, refreshToken);
 
-    const { password: userPassword, ...userData } = user;
-
-    res.status(200).json({ accessToken, refreshToken, user: userData });
+    res.status(200).json({ accessToken, refreshToken, currentUser: { username: user.username }});
   } catch (error) {
-    console.error('Error in loginUser:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Login User Error' });
   }
 }
 
 const logoutUser = async (req, res) => {
-    try {
-      const userId = req.user._id;
-      const updateData = {
-        refreshToken: '', 
-        lastAccess: new Date() 
-      };
-  
-      await UserModel.updateUserById(userId, updateData);
-  
-      res.status(200).json({ message: 'Logout successful' });
-    } catch (error) {
-      console.error('Error in logout:', error);
-      res.status(500).json({ error: 'Internal server error' });
-    }
-  };
+  const user_id = req.user._id;
+  try {
+    const updateData = {
+      refreshToken: '', 
+      last_login: new Date() 
+    };
+
+    await UserModel.logoutUser(user_id, updateData);
+    res.status(200).json({ message: 'Logout successful' });
+  } catch (error) {
+    console.error('Error in logout:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
 
 module.exports = {
     loginUser,

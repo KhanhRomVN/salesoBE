@@ -2,13 +2,13 @@ const UserModel = require('../models/UserModel');
 const ProductModel = require('../models/ProductModel');
 
 const addProduct = async (req, res) => {
-    const { name, type, price, discount, image } = req.body;
-    const userId = req.user._id.toString();
+    const { name, image, description, price, category, inventory } = req.body;
+    const user_id = req.user._id.toString();
 
     try {
-        const user = await UserModel.getUserById(userId);
+        const user = await UserModel.getUserById(user_id);
         if (!user) {
-            return res.status(401).json({ error: 'Invalid userId' });
+            return res.status(401).json({ error: 'Invalid User' });
         }
         
         if(user.role !== "seller") {
@@ -16,12 +16,13 @@ const addProduct = async (req, res) => {
         }
 
         const productData = {
-            userId,
+            user_id,
             name,
-            type,
+            image,
+            description,
             price,
-            discount,
-            image
+            category,
+            inventory
         };
 
         await ProductModel.addProduct(productData);
@@ -32,19 +33,18 @@ const addProduct = async (req, res) => {
     }
 }
 
-const getProductsByType = async (req, res) => {
-    const { type } = req.body;
-
+const getProductByProductId = async (req, res) => {
+    const { prod_id } = req.body
     try {
-        const products = await ProductModel.getProductsByType(type);
-        res.status(200).json({ products });
+        const product = await ProductModel.getProductByProdId(prod_id);
+        res.status(200).json({ product });
     } catch (error) {
-        console.error("Error getting products by type:", error);
+        console.error("Error getting products by userId:", error);
         res.status(500).json({ error: "Internal Server Error" });
     }
 }
 
-const getProductsByUserId = async (req, res) => {
+const getListOfProductByUserId = async (req, res) => {
     const userId = req.user._id.toString();
 
     try {
@@ -56,20 +56,21 @@ const getProductsByUserId = async (req, res) => {
     }
 }
 
-const getProductsByProdId = async (req, res) => {
-    const { prod_id } = req.body
+const getListOfProductByTypeOfProduct = async (req, res) => {
+    const { category } = req.body;
+
     try {
-        const products = await ProductModel.getProductsByProdId(prod_id);
+        const products = await ProductModel.getProductsByType(category);
         res.status(200).json({ products });
     } catch (error) {
-        console.error("Error getting products by userId:", error);
+        console.error("Error getting products by type:", error);
         res.status(500).json({ error: "Internal Server Error" });
     }
 }
 
 module.exports = {
     addProduct,
-    getProductsByType,
-    getProductsByUserId,
-    getProductsByProdId
+    getProductByProductId,
+    getListOfProductByTypeOfProduct,
+    getListOfProductByUserId
 };
