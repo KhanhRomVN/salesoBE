@@ -55,7 +55,7 @@ const loginUser = async (req, res) => {
     const refreshToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET_KEY, { expiresIn: '7d' });
     await UserModel.updateRefreshToken(user._id, refreshToken);
 
-    res.status(200).json({ accessToken, refreshToken, currentUser: { username: user.username, role: user.role }});
+    res.status(200).json({ accessToken, refreshToken, currentUser: { user_id: user._id, username: user.username, role: user.role }});
   } catch (error) {
     res.status(500).json({ error: 'Login User Error' });
   }

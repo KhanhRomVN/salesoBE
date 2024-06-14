@@ -1,16 +1,22 @@
 const express = require('express');
-const cors = require('cors');
 require('dotenv').config();
-const { connectDB } = require('./config/mongoDB');
 const cookiesParser = require('cookie-parser');
-const { app, server } = require('./socket/index');
+/* Cors */
+const cors = require('cors');
+const whiteList = process.env.WHITE_LIST.split(',');
+/* MongoDN */
+const { connectDB } = require('./config/mongoDB');
+/* Socket IO */
+const http = require('http');
+const socketIo = require('socket.io');
+const socketHandler = require('./socket/index');
+/* Endpoint API  */
 const authRoute = require('./routes/auth.route');
 const userRoute = require('./routes/user.route');
 const productRoute = require('./routes/product.route')
 const adminRoute = require('./routes/admin.route')
 const chatRoute = require('./routes/chat.route')
 const cartRoute = require('./routes/cart.route')
-const whiteList = process.env.WHITE_LIST.split(',');
 
 const corsOptions = {
   origin: function (origin, callback) {
@@ -23,18 +29,20 @@ const corsOptions = {
   credentials: true,
 };
 
+const app = express();
+const server = http.createServer(app);
+const io = socketIo(server, { cors: { origin: process.env.FRONTEND_URL, credentials: true }});
+
+app.use(express.static('public'));
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookiesParser());
-
-const PORT = process.env.PORT || 8080;
 
 app.get('/', (req, res) => {
   res.json({
     message: "Server running at " + PORT
   });
 });
-
 app.use('/auth', authRoute);
 app.use('/product', productRoute);
 app.use('/user', userRoute);
@@ -42,8 +50,11 @@ app.use('/admin', adminRoute);
 app.use('/chat', chatRoute);
 app.use('/cart', cartRoute);
 
+socketHandler(io);
+
+const PORT = process.env.PORT || 8080;
 connectDB().then(() => {
   server.listen(PORT, () => {
-    console.log("server running at " + PORT);
+    console.log("Server is running on port: " + PORT);
   });
 });

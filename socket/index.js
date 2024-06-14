@@ -1,42 +1,22 @@
-const express = require('express')
-const { Server } = require('socket.io')
-const http = require('http')
+module.exports = (io) => {
+  io.on('connection', (socket) => {
+    console.log('A user connected: ' + socket.id);
 
-const app = express()
-const server = http.createServer(app)
-const io = new Server(server, {
-  cors: { origin: process.env.FRONTEND_URL, credentials: true }
-})
+    socket.on('joinRoom', (roomId) => {
+      socket.join(roomId);
+      console.log(`User ${socket.id} joined room: ${roomId}`);
+    });
 
-io.on('connection', (socket) => {
-  console.log("User connected: ", socket.id)
+    socket.on('sendMessage', (roomId, message) => {
+      console.log(`Message from ${socket.id} to room ${roomId}: ${message}`);
+      io.to(roomId).emit('receiveMessage', {
+        senderId: socket.id,
+        message: message
+      });
+    });
 
-  socket.on('room', (data) => {
-    try {
-      socket.join(data)
-      console.log("User", socket.id, "joined room with chat_id: ", data)
-    } catch (error) {
-      console.error('Error when joining room:', error)
-    }
-  })
-
-  socket.on('send', (data) => {
-    try {
-      io.to(data.room).emit('receive', { 
-        room: data.room,
-        text: data.text
-      })
-    } catch (error) {
-      console.error('Error sending message:', error)
-    }
-  })
-
-  socket.on('disconnect', () => {
-    console.log('User disconnected:', socket.id)
-  })
-})
-
-module.exports = {
-  app,
-  server
-}
+    socket.on('disconnect', () => {
+      console.log('User disconnected: ' + socket.id);
+    });
+  });
+};

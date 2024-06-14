@@ -93,10 +93,9 @@ const updateUser = async (user_id, userData) => {
     const updateData = {};
 
     if (userData.username) {
-      // Check if the username already exists
       const usernameExists = await db.collection(COLLECTION_NAME).findOne({
         username: userData.username,
-        _id: { $ne: new ObjectId(user_id) } // exclude the current user
+        _id: { $ne: new ObjectId(user_id) }
       });
       if (usernameExists) {
         throw new Error("Username already exists");
@@ -105,10 +104,9 @@ const updateUser = async (user_id, userData) => {
     }
 
     if (userData.email) {
-      // Check if the email already exists
       const emailExists = await db.collection(COLLECTION_NAME).findOne({
         email: userData.email,
-        _id: { $ne: new ObjectId(user_id) } // exclude the current user
+        _id: { $ne: new ObjectId(user_id) } 
       });
       if (emailExists) {
         throw new Error("Email already exists");
