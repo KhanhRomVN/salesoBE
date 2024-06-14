@@ -191,8 +191,6 @@ const logoutUser = async (user_id, updateData) => {
   }
 }
 
-
- 
 module.exports = {
   addUser,
   getUserById,

@@ -5,8 +5,19 @@ const UserModelDetail = require('../models/UserDetailModel');
 const getUserDetail = async (req, res) => {
   const { username } = req.body
   try {
-    const userDetail = await UserModel.getUserByUserName(username)
-    res.status(200).json({ userDetail });
+    const user = await UserModel.getUserByUserName(username)
+    const user_id = user._id.toString()
+    const userDetail = await UserModelDetail.getUserDetailByUserId(user_id)
+    const userData = { 
+      username: user.username, 
+      role: user.role, 
+      name: userDetail.name, 
+      about: userDetail.about, 
+      address: userDetail.address, 
+      avatar_uri: userDetail.avatar_uri, 
+      background_uri: userDetail.background_uri 
+    }
+    res.status(200).json(userData);
   } catch (error) {
     res.status(500).json({ message: "Error getUserDetail" });
   }

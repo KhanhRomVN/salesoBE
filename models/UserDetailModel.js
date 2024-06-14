@@ -137,10 +137,20 @@ const updateUser = async (user_id, userDetailData) => {
   }
 };
 
+const getUserDetailByUserId = async (user_id) => {
+    try {
+      const db = getDB();
+      return await db.collection(COLLECTION_NAME).findOne({ user_id });
+    } catch (error) {
+      console.error("Error in getUserDetailByUserId: ", error);
+    }
+}
+
 module.exports = {
     addUserDetail,
     addFriend,
     delFriend,
     getListFriends,
-    updateUser
+    updateUser,
+    getUserDetailByUserId
 };
