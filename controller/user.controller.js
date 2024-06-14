@@ -9,6 +9,7 @@ const getUserDetail = async (req, res) => {
     const user_id = user._id.toString()
     const userDetail = await UserModelDetail.getUserDetailByUserId(user_id)
     const userData = { 
+      user_id: user_id,
       username: user.username, 
       role: user.role, 
       name: userDetail.name, 
