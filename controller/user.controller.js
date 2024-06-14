@@ -2,6 +2,17 @@ const bcryptjs = require('bcryptjs');
 const UserModel = require('../models/UserModel');
 const UserModelDetail = require('../models/UserDetailModel');
 
+const getUserDetail = async (req, res) => {
+  const { username } = req.body
+  try {
+    const userDetail = await UserModel.getUserByUserName(username)
+    res.status(200).json({ userDetail });
+  } catch (error) {
+    res.status(500).json({ message: "Error getUserDetail" });
+  }
+  
+}
+
 const updateUser = async (req, res) => {
   const user_id = req.user._id.toString();
   const {
@@ -88,6 +99,7 @@ const delFriend = async (req, res) => {
 };
 
 module.exports = {
+  getUserDetail,
   updateUser,
   updateRole,
   listFriend,

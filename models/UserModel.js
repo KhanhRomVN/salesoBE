@@ -45,6 +45,15 @@ const getUserById = async (userId) => {
   }
 };
 
+const getUserByUserName = async (username) => {
+  try {
+    const db = getDB();
+    return await db.collection(COLLECTION_NAME).findOne({ username });
+  } catch (error) {
+    console.error("Error in getUserById: ", error);
+  }
+}
+
 const getUserByEmail = async (email) => {
   try {
     const db = getDB();
@@ -187,6 +196,7 @@ const logoutUser = async (user_id, updateData) => {
 module.exports = {
   addUser,
   getUserById,
+  getUserByUserName,
   getUserByEmail,
   deleteUserById,
   getAllUsers,
