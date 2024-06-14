@@ -60,6 +60,25 @@ const addFriend = async (user_id, friend_id) => {
   }
 };
 
+const checkFriendStatus = async (user_id, friend_id) => {
+  try {
+    const db = getDB();
+    const user = await db.collection(COLLECTION_NAME).findOne({ user_id: user_id });
+    if (!user) {
+      throw new Error(`User with ID ${user_id} not found`);
+    }
+
+    if (user.friendList && user.friendList.includes(friend_id)) {
+      return 'true' 
+    }
+
+    return 'false'
+  } catch (error) {
+    console.error("Error in addFriend: ", error);
+    throw error;
+  }
+};
+
 const delFriend = async (user_id, friend_id) => {
   try {
     const db = getDB();
@@ -152,5 +171,6 @@ module.exports = {
     delFriend,
     getListFriends,
     updateUser,
-    getUserDetailByUserId
+    getUserDetailByUserId,
+    checkFriendStatus
 };

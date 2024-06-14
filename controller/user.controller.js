@@ -99,6 +99,17 @@ const addFriend = async (req, res) => {
   }
 };
 
+const checkFriendStatus = async (req, res) => {
+  const { friend_id } = req.body;
+  const user_id = req.user._id.toString();
+  try {
+    const is_Friend = await UserModelDetail.checkFriendStatus(user_id, friend_id);
+    res.status(200).json({ is_Friend });
+  } catch (error) {
+    res.status(500).json({ message: "Error adding friend." });
+  }
+}
+
 const delFriend = async (req, res) => {
   const { friend_id } = req.body;
   const user_id = req.user._id.toString();
@@ -116,5 +127,6 @@ module.exports = {
   updateRole,
   listFriend,
   addFriend,
-  delFriend
+  delFriend,
+  checkFriendStatus
 };
