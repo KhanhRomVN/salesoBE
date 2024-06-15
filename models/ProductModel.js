@@ -41,7 +41,7 @@ const getProductsByUserId = async (user_id) => {
     const db = getDB();
     try {
         const products = await db.collection(COLLECTION_NAME).find({ user_id: user_id }).toArray();
-    return products;
+        return products;
     } catch (error) {
         console.error("Error in getProductsByUserId: ", error);
         throw error;

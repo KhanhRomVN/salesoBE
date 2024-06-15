@@ -75,7 +75,14 @@ const getListFriend = async (req, res) => {
     for (let i = 0; i < friend_idList.length; i++) {
       const user_id = friend_idList[i];
       if (user_id !== null) {
-        const friendData = await UserModel.getUserById(user_id);
+        const friendDataResponse = await UserModel.getUserById(user_id);
+        if (friendDataResponse == null) {
+          continue;
+        }
+        const friendData = {
+          user_id: friendDataResponse._id,
+          username: friendDataResponse.username
+        }
         friendDataList.push(friendData);
       }
     }
