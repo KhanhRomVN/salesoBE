@@ -191,6 +191,17 @@ const logoutUser = async (user_id, updateData) => {
   }
 }
 
+const getAllFriend = async () => {
+  const db = getDB();
+  try {
+    const userListData = await db.collection(COLLECTION_NAME).find({}, { projection: { username: 1, email: 1, _id: 0 } }).toArray();
+    return userListData;
+  } catch (error) {
+    console.error('Error in getAllFriend:', error);
+    throw error;
+  }
+}
+
 module.exports = {
   addUser,
   getUserById,
@@ -203,5 +214,6 @@ module.exports = {
   updateRole,
   updateRefreshToken,
   logoutUser,
-  updateUser
+  updateUser,
+  getAllFriend
 };

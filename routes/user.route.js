@@ -11,9 +11,6 @@ router.post('/add-friend', authToken, userController.addFriend);
 router.post('/check-friend', authToken, userController.checkFriendStatus);
 router.post('/del-friend', authToken, userController.delFriend);
 router.post('/list-friend', authToken, userController.getListFriend);
-
-
-
-
+router.get('/get-all-friend', userController.getAllFriend)
 
 module.exports = router;

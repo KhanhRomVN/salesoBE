@@ -1,5 +1,6 @@
 const { getDB } = require('../config/mongoDB');
 const Joi = require('joi');
+const ChatModel = require('../models/ChatModel')
 
 const COLLECTION_NAME = 'messages';
 const COLLECTION_SCHEMA = Joi.object({
@@ -20,6 +21,9 @@ const addMessage = async (messageData) => {
     const db = getDB();
     try {
         validateMessageData(messageData)
+        const chat_id = messageData.chat_id
+        const message = messageData.message
+        await ChatModel.addLastMessage(chat_id, message)
         const result = await db.collection(COLLECTION_NAME).insertOne(messageData);
         return result;
     } catch (error) {

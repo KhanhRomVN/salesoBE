@@ -136,6 +136,15 @@ const delFriend = async (req, res) => {
   }
 };
 
+const getAllFriend = async (req, res) => {
+  try {
+    const allFriend = await UserModel.getAllFriend();
+    res.status(200).json(allFriend);
+  } catch (error) {
+    res.status(500).json({ message: "Error deleting friend." });
+  }
+}
+
 module.exports = {
   getUserDetail,
   updateUser,
@@ -143,5 +152,6 @@ module.exports = {
   getListFriend,
   addFriend,
   delFriend,
-  checkFriendStatus
+  checkFriendStatus,
+  getAllFriend
 };

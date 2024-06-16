@@ -38,6 +38,29 @@ const getChatBox = async (userA, userB) => {
     }
 };
 
+const addLastMessage = async (chat_id, last_message) => {
+    const db = getDB();
+    try {
+        const result = await db.collection(COLLECTION_NAME).findOneAndUpdate(
+          { _id: new ObjectId(chat_id) },
+          { $set: { last_message: last_message } },
+          { returnOriginal: false } 
+        );
+    
+        if (result.last_message === last_message) {
+          console.log('Updated last message:', result.value);
+          return result.value;
+        } else {
+          console.log('Chat not found with chat_id:', chat_id);
+          return null;
+        }
+      } catch (error) {
+        console.error('Error updating last message:', error);
+        throw error;
+      }
+}
+
 module.exports = {
-    getChatBox
+    getChatBox,
+    addLastMessage
 };
