@@ -69,7 +69,17 @@ const getProductByProdId = async (prod_id) => {
         console.error("Error in getProductByProdId: ", error);
         throw error;
     }
-    
+}
+
+const getAllProducts = async () => {
+    const db = getDB();
+    try {
+        const allProducts = await db.collection(COLLECTION_NAME).find({}).toArray();
+        return allProducts;
+    } catch (error) {
+        console.error("Error in getAllProducts: ", error);
+        throw error;
+    }
 }
 
 
@@ -77,5 +87,6 @@ module.exports = {
     addProduct,
     getProductsByUserId,
     getProductsByType,
-    getProductByProdId
+    getProductByProdId,
+    getAllProducts
 };

@@ -68,9 +68,20 @@ const getListOfProductByTypeOfProduct = async (req, res) => {
     }
 }
 
+const getAllProducts = async (req, res) => {
+    try {
+        const allProducts = await ProductModel.getAllProducts();
+        res.status(200).json(allProducts);
+    } catch (error) {
+        console.error("Error getting products by type:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+}
+
 module.exports = {
     addProduct,
     getProductByProductId,
     getListOfProductByTypeOfProduct,
-    getListOfProductByUserId
+    getListOfProductByUserId,
+    getAllProducts
 };
