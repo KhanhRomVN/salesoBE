@@ -1,5 +1,6 @@
 const UserModel = require('../models/UserModel');
 const ProductModel = require('../models/ProductModel');
+const ReviewModel = require('../models/ReviewModel');
 
 const addProduct = async (req, res) => {
     const { name, image, description, price, category, inventory } = req.body;
@@ -34,12 +35,12 @@ const addProduct = async (req, res) => {
 }
 
 const getProductByProductId = async (req, res) => {
-    const { prod_id } = req.body
+    const { prod_id } = req.body;
     try {
         const product = await ProductModel.getProductByProdId(prod_id);
         res.status(200).json({ product });
     } catch (error) {
-        console.error("Error getting products by userId:", error);
+        console.error("Error getting product by prod_id:", error);
         res.status(500).json({ error: "Internal Server Error" });
     }
 }
@@ -73,7 +74,55 @@ const getAllProducts = async (req, res) => {
         const allProducts = await ProductModel.getAllProducts();
         res.status(200).json(allProducts);
     } catch (error) {
-        console.error("Error getting products by type:", error);
+        console.error("Error getting all products:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+}
+
+const getReviews = async (req, res) => {
+    const { prod_id } = req.body;
+    try {
+        const reviews = await ReviewModel.getReviewsByProductId(prod_id);
+        res.status(200).json({ reviews });
+    } catch (error) {
+        console.error("Error getting reviews:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+}
+
+const commentReview = async (req, res) => {
+    const { prod_id, reviewComment } = req.body;
+    const userId = req.user._id.toString();
+    try {
+        const reviewData = {
+            prod_id,
+            user_id: userId,
+            reviewComment,
+            created_at: new Date()
+        };
+
+        await ReviewModel.addReview(reviewData);
+        res.status(201).json({ reviewData });
+    } catch (error) {
+        console.error("Error adding review:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+}
+
+const delReview = async (req, res) => {
+    const { review_id } = req.body;
+    const userId = req.user._id.toString();
+    try {
+        const review = await ReviewModel.getReviewById(review_id);
+
+        if (!review || review.user_id !== userId) {
+            return res.status(401).json({ error: "Unauthorized" });
+        }
+
+        await ReviewModel.deleteReview(review_id);
+        res.status(200).json({ message: "Review deleted successfully" });
+    } catch (error) {
+        console.error("Error deleting review:", error);
         res.status(500).json({ error: "Internal Server Error" });
     }
 }
@@ -83,5 +132,8 @@ module.exports = {
     getProductByProductId,
     getListOfProductByTypeOfProduct,
     getListOfProductByUserId,
-    getAllProducts
+    getAllProducts,
+    getReviews,
+    commentReview,
+    delReview
 };

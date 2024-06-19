@@ -2,7 +2,6 @@ const Joi = require('joi');
 const { ObjectId } = require('mongodb');
 const { getDB } = require('../config/mongoDB');
 
-// Define Collection (Name & Schema)
 const COLLECTION_NAME = 'users';
 const COLLECTION_SCHEMA = Joi.object({
   username: Joi.string().required(),

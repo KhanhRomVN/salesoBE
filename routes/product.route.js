@@ -10,7 +10,9 @@ router.post('/get-products', authToken, productController.getListOfProductByUser
 router.post('/get-type-products', productController.getListOfProductByTypeOfProduct)
 router.get('/get-all-products', productController.getAllProducts)
 
+router.post('/get-reviews', productController.getReviews)
+router.post('/comment-review', authToken, productController.commentReview)
+router.post('/del-review', authToken, productController.delReview)
 
-// router.post('/reviews', authToken, productController.getReviews)
 
 module.exports = router
