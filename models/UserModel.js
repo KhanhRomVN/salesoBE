@@ -5,7 +5,7 @@ const { getDB } = require('../config/mongoDB');
 const COLLECTION_NAME = 'users';
 const COLLECTION_SCHEMA = Joi.object({
     username: Joi.string().optional(),
-    email: Joi.string().email().required(),
+    email: Joi.string().email().optional(),
     password: Joi.string().optional(),
     role: Joi.string().valid('admin', 'seller', 'customer').default('customer'),
     register_at: Joi.date().required(),
@@ -14,14 +14,12 @@ const COLLECTION_SCHEMA = Joi.object({
     refreshToken: Joi.string().default(""),
     oauth: Joi.object({
         google: Joi.object({
-            id: Joi.string().optional(),
+            gg_id: Joi.string().optional(),
             email: Joi.string().email().optional(),
-            token: Joi.string().optional()
         }).optional(),
         facebook: Joi.object({
-            id: Joi.string().optional(),
+            face_id: Joi.string().optional(),
             email: Joi.string().email().optional(),
-            token: Joi.string().optional()
         }).optional()
     }).optional()
 }).options({ abortEarly: false });
@@ -177,6 +175,23 @@ const getAllUsers = async () => {
           throw error;
       }
   };
+
+  const getUserBySub = async (sub) => {
+    try {
+        const db = getDB();
+        const result = await db.collection(COLLECTION_NAME).findOne({
+            $or: [
+                { 'oauth.google.gg_id': sub },     // Check Google sub
+                { 'oauth.facebook.face_id': sub } // Check Facebook sub
+            ]
+        });
+        console.log(result);
+        return result;
+    } catch (error) {
+        console.error('Error in getUserBySub:', error);
+        throw error;
+    }
+};
   
   module.exports = {
       addUser,
@@ -188,6 +203,7 @@ const getAllUsers = async () => {
       updateRole,
       updateRefreshToken,
       logoutUser,
-      updateUser
+      updateUser,
+      getUserBySub
   };
   

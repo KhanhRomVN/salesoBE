@@ -117,27 +117,25 @@ const loginGoogleUser = async (req, res) => {
 const registerGoogleUser = async (req, res) => {
   const { sub, email, name, picture } = req.body;
     try {
-        let user = await UserModel.getUserByEmail(email);
-        if (user) {
-            return res.status(400).json({ error: 'User already exists with this email' });
+        let invalidUser = await UserModel.getUserBySub(sub);
+        if (invalidUser) {
+            return res.status(400).json({ error: 'User already exists with this google sub' });
         }
 
         const newUser = {
-            email,
             oauth: {
                 google: {
-                    id: sub,
+                    gg_id: sub,
                     email,
-                    token: idToken
                 }
             },
             role: 'customer',
             register_at: new Date()
         };
-        user = await UserModel.addUser(newUser);
+        const user = await UserModel.addUser(newUser);
 
         const newUserDetail = {
-            user_id: user._id,
+            user_id: user,
             name,
             avatar_uri: picture
         };

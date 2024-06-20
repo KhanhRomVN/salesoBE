@@ -6,8 +6,8 @@ const COLLECTION_NAME = 'user_detail';
 const COLLECTION_SCHEMA = Joi.object({
     user_id: Joi.string().required(),
     name: Joi.string().required(),
-    age: Joi.number().integer().min(12).required(),
-    gender: Joi.string().valid('male', 'female').required(),
+    age: Joi.number().integer().min(12).default(''),
+    gender: Joi.string().valid('male', 'female').default(''),
     about: Joi.string().default(''),
     phone_number: Joi.string().pattern(/^[0-9]{10,11}$/).default(''),
     address: Joi.string().default(''),
