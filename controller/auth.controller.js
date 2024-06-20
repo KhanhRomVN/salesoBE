@@ -80,36 +80,37 @@ const logoutUser = async (req, res) => {
 const loginGoogleUser = async (req, res) => {
     const { sub, email, name, picture } = req.body;
     try {
-        let user = await UserModel.getUserBySub(sub);
-        if (!user) {
-            const newUser = {
-                oauth: {
-                    google: {
-                        gg_id: sub,
-                        email,
-                    }
-                },
-                role: 'customer',
-                register_at: new Date()
-            };
-            user = await UserModel.addUser(newUser);
-            const newUserDetail = {
-                user_id: user,
-                name,
-                avatar_uri: picture
-            };
-            await userDetailModel.addUserDetail(newUserDetail);
-        }
-        
-        const accessToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET_KEY, { expiresIn: '1d' });
-        const refreshToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET_KEY, { expiresIn: '7d' });
-        await UserModel.updateRefreshToken(user._id, refreshToken);
-
-        res.status(200).json({ accessToken, refreshToken, currentUser: { user_id: user._id, username: user.username, role: user.role } });
+      let user = await UserModel.getUserBySub(sub);
+      if (!user) {
+        const newUser = {
+          oauth: {
+            google: {
+              gg_id: sub,
+              email,
+            }
+          },
+          role: 'customer',
+          register_at: new Date()
+        };
+        const user_id = await UserModel.addUser(newUser);
+        const newUserDetail = {
+          user_id,
+          name,
+          avatar_uri: picture
+        };
+        await userDetailModel.addUserDetail(newUserDetail);
+        user = await UserModel.getUserById(user_id); // Retrieve the new user
+      }
+  
+      const accessToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET_KEY, { expiresIn: '1d' });
+      const refreshToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET_KEY, { expiresIn: '7d' });
+      await UserModel.updateRefreshToken(user._id, refreshToken);
+  
+      res.status(200).json({ accessToken, refreshToken, currentUser: { user_id: user._id.toString(), username: user.username || "", role: user.role } });
     } catch (error) {
-        res.status(500).json({ error: 'Register with Google Error' });
+      res.status(500).json({ error: 'Register with Google Error' });
     }
-};
+  };
 
 module.exports = {
     loginUser,

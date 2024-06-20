@@ -28,14 +28,15 @@ const getUserDetail = async (req, res) => {
 const updateUser = async (req, res) => {
   const user_id = req.user._id.toString();
   const {
-    username, email, password, name, age, gender, about,
+    username, email, name, age, gender, about,
     phone_number, address, avatar_uri, background_uri
   } = req.body;
 
   const user = {};
   if (username) user.username = username;
   if (email) user.email = email;
-  if (password) user.password = password;
+
+  console.log(user);
 
   const userDetail = {};
   if (name) userDetail.name = name;
@@ -48,19 +49,16 @@ const updateUser = async (req, res) => {
   if (background_uri) userDetail.background_uri = background_uri;
 
   try {
-    if (user.password) {
-      const hashedPassword = await bcryptjs.hash(password, 10);
-      if (Object.keys(user).length > 0) {
-        user.password = hashedPassword
-        await UserModel.updateUser(user_id, user);
-      }
+    if (Object.keys(user).length > 0) {
+      const userUpdate = await UserModel.updateUser(user_id, user);
+      res.status(200).json({ userUpdate });
     }
 
     if (Object.keys(userDetail).length > 0) {
       await UserModelDetail.updateUser(user_id, userDetail);
     }
 
-    res.status(200).json({ message: "User updated successfully" });
+    res.status(200).json({ message: "Update User SuccessFull" });
   } catch (error) {
     console.error("Error updating user: ", error);
     res.status(500).json({ message: "Error updating user" });
@@ -100,6 +98,18 @@ const updateRole = async (req, res) => {
   } catch (error) {
     console.error("Error in updateRole: ", error);
     res.status(500).json({ message: "Error updating role" });
+  }
+};
+
+const updateUserName = async (req, res) => {
+  const user_id = req.user._id.toString();
+  const { username } = req.body;
+  try {
+    const updatedUser = await UserModel.updateUserName(user_id, username);
+    res.status(200).json({ updatedUser });
+  } catch (error) {
+    console.error('Error updating user:', error);
+    res.status(500).json({ error: 'Update User Error' });
   }
 };
 
@@ -153,5 +163,6 @@ module.exports = {
   addFriend,
   delFriend,
   checkFriendStatus,
-  getAllFriend
+  getAllFriend,
+  updateUserName
 };

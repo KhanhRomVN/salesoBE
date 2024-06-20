@@ -90,78 +90,96 @@ const getAllUsers = async () => {
       }
   };
   
-  const updateRole = async (userId) => {
-      try {
-          const db = getDB();
-          await db.collection(COLLECTION_NAME).updateOne(
-              { _id: new ObjectId(userId) },
-              { $set: { role: 'seller' } }
-          );
-      } catch (error) {
-          console.error("Error in updateRole: ", error);
-          throw error;
-      }
-  };
+const updateRole = async (userId) => {
+    try {
+        const db = getDB();
+        await db.collection(COLLECTION_NAME).updateOne(
+            { _id: new ObjectId(userId) },
+            { $set: { role: 'seller' } }
+        );
+    } catch (error) {
+        console.error("Error in updateRole: ", error);
+        throw error;
+    }
+      
+};
+
+const updateUserName = async (userId, username) => {
+    try {
+        const db = getDB();
+        await db.collection(COLLECTION_NAME).updateOne(
+            { _id: new ObjectId(userId) },
+            { $set: { username: username } }
+        );
+    } catch (error) {
+        console.error("Error in updateRole: ", error);
+        throw error;
+    }
+      
+};
+
+
+
+const updateUser = async (user_id, userData) => {
+    try {
+        const db = getDB();
+        const updateData = {};
+
+        if (userData.username) {
+            const usernameExists = await db.collection(COLLECTION_NAME).findOne({
+                username: userData.username,
+                _id: { $ne: new ObjectId(user_id) }
+            });
+            if (usernameExists) {
+                throw new Error("Username already exists");
+            }
+            updateData.username = userData.username;
+        }
+
+        if (userData.email) {
+            const emailExists = await db.collection(COLLECTION_NAME).findOne({
+                email: userData.email,
+                _id: { $ne: new ObjectId(user_id) }
+            });
+            if (emailExists) {
+                throw new Error("Email already exists");
+            }
+            updateData.email = userData.email;
+        }
+
+        if (userData.password) {
+            updateData.password = userData.password;
+        }
+
+        updateData.update_at = new Date();
+
+        if (Object.keys(updateData).length === 0) {
+            throw new Error("No valid fields to update");
+        }
+
+        await db.collection(COLLECTION_NAME).updateOne(
+            { _id: new ObjectId(user_id) },
+            { $set: updateData }
+        );
+        return updateData;
+    } catch (error) {
+        console.error("Error in updateUser: ", error);
+        throw error; 
+    }
+};
   
-  const updateUser = async (user_id, userData) => {
-      try {
-          const db = getDB();
-          const updateData = {};
-  
-          if (userData.username) {
-              const usernameExists = await db.collection(COLLECTION_NAME).findOne({
-                  username: userData.username,
-                  _id: { $ne: new ObjectId(user_id) }
-              });
-              if (usernameExists) {
-                  throw new Error("Username already exists");
-              }
-              updateData.username = userData.username;
-          }
-  
-          if (userData.email) {
-              const emailExists = await db.collection(COLLECTION_NAME).findOne({
-                  email: userData.email,
-                  _id: { $ne: new ObjectId(user_id) }
-              });
-              if (emailExists) {
-                  throw new Error("Email already exists");
-              }
-              updateData.email = userData.email;
-          }
-  
-          if (userData.password) {
-              updateData.password = userData.password;
-          }
-  
-          updateData.update_at = new Date();
-  
-          if (Object.keys(updateData).length === 0) {
-              throw new Error("No valid fields to update");
-          }
-  
-          await db.collection(COLLECTION_NAME).updateOne(
-              { _id: new ObjectId(user_id) },
-              { $set: updateData }
-          );
-      } catch (error) {
-          console.error("Error in updateUser: ", error);
-          throw error;
-      }
-  };
-  
-  const updateRefreshToken = async (userId, refreshToken) => {
-      try {
-          const db = getDB();
-          await db.collection(COLLECTION_NAME).updateOne(
-              { _id: new ObjectId(userId) },
-              { $set: { refreshToken }, $currentDate: { last_login: true } }
-          );
-      } catch (error) {
-          console.error("Error in updateRefreshToken: ", error);
-          throw error;
-      }
-  };
+const updateRefreshToken = async (userId, refreshToken) => {
+    try {
+        const db = getDB();
+        await db.collection(COLLECTION_NAME).updateOne(
+            { _id: new ObjectId(userId) },
+            { $set: { refreshToken }, $currentDate: { last_login: true } }
+        );
+    } catch (error) {
+        console.error("Error in updateRefreshToken: ", error);
+        throw error;
+    }
+};
   
   const logoutUser = async (user_id, updateData) => {
       try {
@@ -204,5 +222,6 @@ const getAllUsers = async () => {
       updateRefreshToken,
       logoutUser,
       updateUser,
-      getUserBySub
+      getUserBySub,
+      updateUserName
   };
