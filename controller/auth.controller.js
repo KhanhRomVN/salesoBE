@@ -78,70 +78,34 @@ const logoutUser = async (req, res) => {
 };
 
 const loginGoogleUser = async (req, res) => {
-  const { sub, email, name, picture } = req.body;
+    const { sub, email, name, picture } = req.body;
     try {
-        let user = await UserModel.getUserByEmail(email);
+        let user = await UserModel.getUserBySub(sub);
         if (!user) {
             const newUser = {
-                email,
                 oauth: {
                     google: {
-                        id: sub,
+                        gg_id: sub,
                         email,
-                        token: idToken
                     }
                 },
                 role: 'customer',
                 register_at: new Date()
             };
             user = await UserModel.addUser(newUser);
-
             const newUserDetail = {
-                user_id: user._id,
+                user_id: user,
                 name,
                 avatar_uri: picture
             };
             await userDetailModel.addUserDetail(newUserDetail);
         }
-
+        
         const accessToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET_KEY, { expiresIn: '1d' });
         const refreshToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET_KEY, { expiresIn: '7d' });
         await UserModel.updateRefreshToken(user._id, refreshToken);
 
         res.status(200).json({ accessToken, refreshToken, currentUser: { user_id: user._id, username: user.username, role: user.role } });
-    } catch (error) {
-        res.status(500).json({ error: 'Login with Google Error' });
-    }
-};
-
-const registerGoogleUser = async (req, res) => {
-  const { sub, email, name, picture } = req.body;
-    try {
-        let invalidUser = await UserModel.getUserBySub(sub);
-        if (invalidUser) {
-            return res.status(400).json({ error: 'User already exists with this google sub' });
-        }
-
-        const newUser = {
-            oauth: {
-                google: {
-                    gg_id: sub,
-                    email,
-                }
-            },
-            role: 'customer',
-            register_at: new Date()
-        };
-        const user = await UserModel.addUser(newUser);
-
-        const newUserDetail = {
-            user_id: user,
-            name,
-            avatar_uri: picture
-        };
-        await userDetailModel.addUserDetail(newUserDetail);
-
-        res.status(201).json({ message: 'User registered with Google successfully' });
     } catch (error) {
         res.status(500).json({ error: 'Register with Google Error' });
     }
@@ -152,5 +116,4 @@ module.exports = {
     registerUser,
     logoutUser,
     loginGoogleUser,
-    registerGoogleUser
 };

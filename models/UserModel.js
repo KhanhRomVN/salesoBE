@@ -206,4 +206,3 @@ const getAllUsers = async () => {
       updateUser,
       getUserBySub
   };
-  
