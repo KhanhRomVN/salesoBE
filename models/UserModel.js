@@ -12,6 +12,7 @@ const COLLECTION_SCHEMA = Joi.object({
     last_login: Joi.date().default(() => new Date()),
     update_at: Joi.date().default(() => new Date()),
     refreshToken: Joi.string().default(""),
+    emailConfirmed: Joi.boolean().default(false),
     oauth: Joi.object({
         google: Joi.object({
             gg_id: Joi.string().optional(),
@@ -83,13 +84,12 @@ const getUsersByArrayOfId = async (userIds) => {
 const getAllUsers = async () => {
     try {
         const db = getDB();
-       
         return await db.collection(COLLECTION_NAME).find().toArray();
-      } catch (error) {
-          console.error("Error in getAllUsers: ", error);
-      }
-  };
-  
+    } catch (error) {
+        console.error("Error in getAllUsers: ", error);
+    }
+};
+
 const updateRole = async (userId) => {
     try {
         const db = getDB();
@@ -101,7 +101,6 @@ const updateRole = async (userId) => {
         console.error("Error in updateRole: ", error);
         throw error;
     }
-      
 };
 
 const updateUserName = async (userId, username) => {
@@ -115,10 +114,7 @@ const updateUserName = async (userId, username) => {
         console.error("Error in updateRole: ", error);
         throw error;
     }
-      
 };
-
-
 
 const updateUser = async (user_id, userData) => {
     try {
@@ -167,7 +163,20 @@ const updateUser = async (user_id, userData) => {
         throw error; 
     }
 };
-  
+
+const confirmEmail = async (user_id) => {
+    try {
+        const db = getDB();
+        await db.collection(COLLECTION_NAME).updateOne(
+            { _id: new ObjectId(user_id) },
+            { $set: { emailConfirmed: true } }
+        );
+    } catch (error) {
+        console.error('Error in confirmEmail:', error);
+        throw error;
+    }
+};
+
 const updateRefreshToken = async (userId, refreshToken) => {
     try {
         const db = getDB();
@@ -180,21 +189,21 @@ const updateRefreshToken = async (userId, refreshToken) => {
         throw error;
     }
 };
-  
-  const logoutUser = async (user_id, updateData) => {
-      try {
-          const db = getDB();
-          await db.collection(COLLECTION_NAME).updateOne(
-              { _id: new ObjectId(user_id) },
-              { $set: updateData }
-          );
-      } catch (error) {
-          console.error('Error in UserModel.logoutUser:', error);
-          throw error;
-      }
-  };
 
-  const getUserBySub = async (sub) => {
+const logoutUser = async (user_id, updateData) => {
+    try {
+        const db = getDB();
+        await db.collection(COLLECTION_NAME).updateOne(
+            { _id: new ObjectId(user_id) },
+            { $set: updateData }
+        );
+    } catch (error) {
+        console.error('Error in UserModel.logoutUser:', error);
+        throw error;
+    }
+};
+
+const getUserBySub = async (sub) => {
     try {
         const db = getDB();
         const result = await db.collection(COLLECTION_NAME).findOne({
@@ -203,25 +212,25 @@ const updateRefreshToken = async (userId, refreshToken) => {
                 { 'oauth.facebook.face_id': sub } // Check Facebook sub
             ]
         });
-        console.log(result);
         return result;
     } catch (error) {
         console.error('Error in getUserBySub:', error);
         throw error;
     }
 };
-  
-  module.exports = {
-      addUser,
-      getUserById,
-      getUserByUserName,
-      getUserByEmail,
-      getAllUsers,
-      getUsersByArrayOfId,
-      updateRole,
-      updateRefreshToken,
-      logoutUser,
-      updateUser,
-      getUserBySub,
-      updateUserName
-  };
+
+module.exports = {
+    addUser,
+    getUserById,
+    getUserByUserName,
+    getUserByEmail,
+    getAllUsers,
+    getUsersByArrayOfId,
+    updateRole,
+    updateRefreshToken,
+    logoutUser,
+    updateUser,
+    getUserBySub,
+    updateUserName,
+    confirmEmail
+};
