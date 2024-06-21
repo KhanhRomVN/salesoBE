@@ -11,12 +11,12 @@ const getUserDetail = async (req, res) => {
     const userData = { 
       user_id: user_id,
       username: user.username, 
+      email: user.email,
       role: user.role, 
       name: userDetail.name, 
       about: userDetail.about, 
       address: userDetail.address, 
       avatar_uri: userDetail.avatar_uri, 
-      background_uri: userDetail.background_uri 
     }
     res.status(200).json(userData);
   } catch (error) {
