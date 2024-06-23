@@ -1,0 +1,4 @@
+{"level":"info","message":"Handling request for loginUser","service":"user-service","timestamp":"2024-06-23 20:34:55"}
+{"level":"info","message":"User logged in: admin1@gmail.com","service":"user-service","timestamp":"2024-06-23 20:34:56"}
+{"level":"info","message":"Handling request for loginUser","service":"user-service","timestamp":"2024-06-23 21:34:57"}
+{"level":"info","message":"User logged in: admin1@gmail.com","service":"user-service","timestamp":"2024-06-23 21:34:57"}

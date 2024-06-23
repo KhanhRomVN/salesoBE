@@ -2,6 +2,7 @@ const UserModel = require('../models/UserModel');
 const ProductModel = require('../models/ProductModel');
 const ReviewModel = require('../models/ReviewModel');
 
+//* --------------- Product ---------------------
 const addProduct = async (req, res) => {
     const { name, image, description, price, category, inventory } = req.body;
     const user_id = req.user._id.toString();
@@ -45,6 +46,7 @@ const getProductByProductId = async (req, res) => {
     }
 }
 
+//* ----------------- List Products ----------------
 const getListOfProductByUserId = async (req, res) => {
     const userId = req.user._id.toString();
 
@@ -57,11 +59,11 @@ const getListOfProductByUserId = async (req, res) => {
     }
 }
 
-const getListOfProductByTypeOfProduct = async (req, res) => {
+const getListOfProductByCategory = async (req, res) => {
     const { category } = req.body;
 
     try {
-        const products = await ProductModel.getProductsByType(category);
+        const products = await ProductModel.getProductsByCategory(category);
         res.status(200).json({ products });
     } catch (error) {
         console.error("Error getting products by type:", error);
@@ -79,6 +81,7 @@ const getAllProducts = async (req, res) => {
     }
 }
 
+//* ------------------ Review -------------------
 const getReviews = async (req, res) => {
     const { prod_id } = req.body;
     try {
@@ -130,7 +133,7 @@ const delReview = async (req, res) => {
 module.exports = {
     addProduct,
     getProductByProductId,
-    getListOfProductByTypeOfProduct,
+    getListOfProductByCategory,
     getListOfProductByUserId,
     getAllProducts,
     getReviews,

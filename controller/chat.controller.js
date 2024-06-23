@@ -21,7 +21,6 @@ const getLastMessage = async (req, res) => {
     const sender_id = req.user._id.toString();
     try {
         const chat = await ChatModel.getChatBox(sender_id, receiver_id);
-        const chat_id = chat._id.toString()
         const last_message = chat.last_message
         return res.status(200).json({last_message}); 
     } catch (error) {

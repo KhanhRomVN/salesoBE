@@ -48,7 +48,7 @@ const getProductsByUserId = async (user_id) => {
     }
 }
 
-const getProductsByType = async (category) => {
+const getProductsByCategory = async (category) => {
     const db = getDB();
     try {
         const products = await db.collection(COLLECTION_NAME).find({ category: category }).toArray();
@@ -86,7 +86,7 @@ const getAllProducts = async () => {
 module.exports = {
     addProduct,
     getProductsByUserId,
-    getProductsByType,
+    getProductsByCategory,
     getProductByProdId,
     getAllProducts
 };

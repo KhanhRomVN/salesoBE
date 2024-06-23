@@ -25,18 +25,17 @@ const getUserDetail = async (req, res) => {
   
 }
 
+//! Do it right now!
 const updateUser = async (req, res) => {
   const user_id = req.user._id.toString();
   const {
     username, email, name, age, gender, about,
-    phone_number, address, avatar_uri, background_uri
+    phone_number, address, avatar_uri
   } = req.body;
 
   const user = {};
   if (username) user.username = username;
   if (email) user.email = email;
-
-  console.log(user);
 
   const userDetail = {};
   if (name) userDetail.name = name;
@@ -46,7 +45,6 @@ const updateUser = async (req, res) => {
   if (phone_number) userDetail.phone_number = phone_number;
   if (address) userDetail.address = address;
   if (avatar_uri) userDetail.avatar_uri = avatar_uri;
-  if (background_uri) userDetail.background_uri = background_uri;
 
   try {
     if (Object.keys(user).length > 0) {

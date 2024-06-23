@@ -13,7 +13,7 @@ const COLLECTION_SCHEMA = Joi.object({
     last_login: Joi.date().default(() => new Date()),
     update_at: Joi.date().default(() => new Date()),
     refreshToken: Joi.string().default(""),
-    emailConfirmed: Joi.string().valid('true', 'false').default('false'), 
+    emailConfirmed: Joi.string().valid('true', 'false').default('false'),
     oauth: Joi.object({
         google: Joi.object({
             gg_id: Joi.string().optional(),
@@ -30,9 +30,9 @@ const validateUser = (userData) => {
 };
 
 const addUser = async (userData) => {
-    const { username, password, role, register_at } = userData
-    const tempUserData = { username, password, role, register_at }
-    const email = userData.email
+    const { username, password, role, register_at } = userData;
+    const tempUserData = { username, password, role, register_at };
+    const email = userData.email;
     try {
         validateUser(userData);
         const db = getDB();
@@ -170,6 +170,17 @@ const updateUser = async (userId, userData) => {
     }
 };
 
+const addGoogleUser = async (newUser) => {
+    try {
+        const db = getDB();
+        const result = await db.collection(COLLECTION_NAME).insertOne(newUser);
+        return result.insertedId;
+    } catch (error) {
+        console.error("Error in addGoogleUser: ", error);
+        throw error;
+    }
+}
+
 module.exports = {
     addUser,
     getUserById,
@@ -180,4 +191,5 @@ module.exports = {
     updateUser,
     getUserBySub,
     confirmEmail,
+    addGoogleUser
 };

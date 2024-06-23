@@ -12,7 +12,6 @@ const COLLECTION_SCHEMA = Joi.object({
     phone_number: Joi.string().pattern(/^[0-9]{10,11}$/).default(''),
     address: Joi.string().default(''),
     avatar_uri: Joi.string().default(''),
-    background_uri: Joi.string().default(''),
     friendList: Joi.array().default([])
 }).options({ abortEarly: false });
 
