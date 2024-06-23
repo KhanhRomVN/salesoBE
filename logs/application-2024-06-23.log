@@ -2,3 +2,11 @@
 {"level":"info","message":"User logged in: admin1@gmail.com","service":"user-service","timestamp":"2024-06-23 20:34:56"}
 {"level":"info","message":"Handling request for loginUser","service":"user-service","timestamp":"2024-06-23 21:34:57"}
 {"level":"info","message":"User logged in: admin1@gmail.com","service":"user-service","timestamp":"2024-06-23 21:34:57"}
+{"level":"info","message":"Successfully connected to the database","service":"user-service","timestamp":"2024-06-23 22:00:11"}
+{"level":"info","message":"Handling request for loginUser","service":"user-service","timestamp":"2024-06-23 22:00:40"}
+{"level":"info","message":"User logged in: admin1@gmail.com","service":"user-service","timestamp":"2024-06-23 22:00:41"}
+{"level":"info","message":"Handling request for loginUser","service":"user-service","timestamp":"2024-06-23 22:00:50"}
+{"level":"warn","message":"Invalid email attempted: admin100@gmail.com","service":"user-service","timestamp":"2024-06-23 22:00:50"}
+{"level":"info","message":"Successfully connected to the database","service":"user-service","timestamp":"2024-06-23 22:09:15"}
+{"level":"info","message":"Handling request for loginUser","service":"user-service","timestamp":"2024-06-23 22:12:13"}
+{"level":"warn","message":"Invalid email attempted: admin100@gmail.com","service":"user-service","timestamp":"2024-06-23 22:12:13"}
