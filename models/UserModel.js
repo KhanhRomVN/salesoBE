@@ -40,7 +40,7 @@ const addUser = async (userData) => {
     try {
         validateUser(userData);
         const db = getDB();
-        const result = await db.collection(COLLECTION_NAME).updateOne(
+        await db.collection(COLLECTION_NAME).updateOne(
             { email },
             { $set: tempUserData }
         );
