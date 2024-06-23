@@ -81,8 +81,8 @@ const registerUser = async (req, res) => {
 const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
-
         const user = await UserModel.getUserByEmail(email);
+        console.log(user);
         if (!user) {
             return res.status(401).json({ error: 'Invalid email' });
         }
@@ -132,7 +132,7 @@ const loginGoogleUser = async (req, res) => {
                 oauth: {
                     google: {
                         gg_id: sub,
-                        email,
+                        gg_email: email,
                     }
                 },
                 role: 'customer',

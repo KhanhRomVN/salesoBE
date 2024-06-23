@@ -13,16 +13,12 @@ const COLLECTION_SCHEMA = Joi.object({
     last_login: Joi.date().default(() => new Date()),
     update_at: Joi.date().default(() => new Date()),
     refreshToken: Joi.string().default(""),
-    emailConfirmed: Joi.string().valid('true', 'false').default('false'), // Ensure default value is set
+    emailConfirmed: Joi.string().valid('true', 'false').default('false'), 
     oauth: Joi.object({
         google: Joi.object({
             gg_id: Joi.string().optional(),
-            email: Joi.string().email().optional(),
+            gg_email: Joi.string().email().optional(),
         }).optional(),
-        facebook: Joi.object({
-            face_id: Joi.string().optional(),
-            email: Joi.string().email().optional(),
-        }).optional()
     }).optional()
 }).options({ abortEarly: false });
 
@@ -119,12 +115,7 @@ const logoutUser = async (userId, updateData) => {
 const getUserBySub = async (sub) => {
     try {
         const db = getDB();
-        return await db.collection(COLLECTION_NAME).findOne({
-            $or: [
-                { 'oauth.google.gg_id': sub },
-                { 'oauth.facebook.face_id': sub }
-            ]
-        });
+        return await db.collection(COLLECTION_NAME).findOne({ 'oauth.google.gg_id': sub });
     } catch (error) {
         console.error('Error in getUserBySub:', error);
         throw error;
