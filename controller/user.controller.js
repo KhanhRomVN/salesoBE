@@ -97,6 +97,7 @@ const updateName = async (req, res) => {
 const updateAge = async (req, res) => {
     const user_id = req.user._id.toString();
     const { age } = req.body;
+    logger.info(age);
     try {
         await UserModelDetail.updateAge(user_id, age);
         res.status(200).json({ message: 'Update age successfully!' });

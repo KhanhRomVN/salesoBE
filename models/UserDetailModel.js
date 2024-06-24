@@ -1,4 +1,3 @@
-const { ObjectId } = require('mongodb');
 const { getDB } = require('../config/mongoDB');
 
 const COLLECTION_NAME = 'user_detail';
