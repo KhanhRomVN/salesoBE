@@ -1,4 +1,3 @@
-const bcryptjs = require('bcryptjs');
 const UserModel = require('../models/UserModel');
 const UserModelDetail = require('../models/UserDetailModel');
 const logger = require('../config/logger');
@@ -111,8 +110,8 @@ const updateUserName = async (req, res) => {
     const user_id = req.user._id.toString();
     const { username } = req.body;
     try {
-        const updatedUser = await UserModel.updateUserName(user_id, username);
-        res.status(200).json({ updatedUser });
+        await UserModel.updateUserName(user_id, username);
+        res.status(200).json({ message: 'Update username successfully!' });
     } catch (error) {
         logger.error('Error updating username:', error);
         res.status(500).json({ error: 'Error updating username' });

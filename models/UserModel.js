@@ -181,6 +181,19 @@ const addGoogleUser = async (newUser) => {
     }
 }
 
+const updateUserName = async (user_id, username) => {
+    try {
+        const db = getDB();
+        await db.collection(COLLECTION_NAME).updateOne(
+            { _id: new ObjectId(user_id) },
+            { $set: { username }}
+        );
+    } catch (error) {
+        console.error("Error in addGoogleUser: ", error);
+        throw error;
+    }
+}
+
 module.exports = {
     addUser,
     getUserById,
@@ -191,5 +204,6 @@ module.exports = {
     updateUser,
     getUserBySub,
     confirmEmail,
-    addGoogleUser
+    addGoogleUser,
+    updateUserName
 };
