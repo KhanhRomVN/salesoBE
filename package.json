@@ -1,7 +1,7 @@
 {
-  "name": "server",
-  "version": "1.0.0",
-  "description": "",
+  "name": "salesoBE",
+  "version": "2.5.7",
+  "description": "Saleso Shopping And Social Media Project Backend Using Nodejs, MongoDB, Express",
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -9,10 +9,9 @@
     "start": "node server.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "KhanhRomVN",
   "license": "ISC",
   "dependencies": {
-    "base64url": "^3.0.1",
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",

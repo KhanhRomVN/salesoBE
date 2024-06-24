@@ -1,9 +1,7 @@
 const Joi = require('joi');
 const { ObjectId } = require('mongodb');
 const { getDB } = require('../config/mongoDB');
-
 const COLLECTION_NAME = 'users';
-
 const COLLECTION_SCHEMA = Joi.object({
     username: Joi.string().optional(),
     email: Joi.string().email().optional(),
@@ -21,7 +19,6 @@ const COLLECTION_SCHEMA = Joi.object({
         }).optional(),
     }).optional()
 }).options({ abortEarly: false });
-
 const validateUser = (userData) => {
     const validation = COLLECTION_SCHEMA.validate(userData);
     if (validation.error) {
@@ -29,6 +26,7 @@ const validateUser = (userData) => {
     }
 };
 
+//* Register Basic 
 const addUser = async (userData) => {
     const { username, password, role, register_at } = userData;
     const tempUserData = { username, password, role, register_at };
@@ -46,6 +44,60 @@ const addUser = async (userData) => {
     }
 };
 
+const confirmEmail = async (email) => {
+    try {
+        const db = getDB();
+        await db.collection(COLLECTION_NAME).updateOne(
+            { email },
+            { $set: { emailConfirmed: 'true' } }
+        );
+    } catch (error) {
+        console.error('Error in confirmEmail:', error);
+        throw error;
+    }
+};
+
+//* Register Google Account 
+const addGoogleUser = async (newUser) => {
+    try {
+        const db = getDB();
+        const result = await db.collection(COLLECTION_NAME).insertOne(newUser);
+        return result.insertedId;
+    } catch (error) {
+        console.error("Error in addGoogleUser: ", error);
+        throw error;
+    }
+}
+
+//* Login 
+const updateRefreshToken = async (userId, refreshToken) => {
+    try {
+        const db = getDB();
+        await db.collection(COLLECTION_NAME).updateOne(
+            { _id: new ObjectId(userId) },
+            { $set: { refreshToken }, $currentDate: { last_login: true } }
+        );
+    } catch (error) {
+        console.error("Error in updateRefreshToken: ", error);
+        throw error;
+    }
+};
+
+//* Logout
+const logoutUser = async (userId, updateData) => {
+    try {
+        const db = getDB();
+        await db.collection(COLLECTION_NAME).updateOne(
+            { _id: new ObjectId(userId) },
+            { $set: updateData }
+        );
+    } catch (error) {
+        console.error('Error in logoutUser:', error);
+        throw error;
+    }
+};
+
+//* Get Data User
 const getUserById = async (userId) => {
     try {
         const db = getDB();
@@ -73,45 +125,7 @@ const getUserByEmail = async (email) => {
     }
 };
 
-const confirmEmail = async (email) => {
-    try {
-        const db = getDB();
-        await db.collection(COLLECTION_NAME).updateOne(
-            { email },
-            { $set: { emailConfirmed: 'true' } }
-        );
-    } catch (error) {
-        console.error('Error in confirmEmail:', error);
-        throw error;
-    }
-};
-
-const updateRefreshToken = async (userId, refreshToken) => {
-    try {
-        const db = getDB();
-        await db.collection(COLLECTION_NAME).updateOne(
-            { _id: new ObjectId(userId) },
-            { $set: { refreshToken }, $currentDate: { last_login: true } }
-        );
-    } catch (error) {
-        console.error("Error in updateRefreshToken: ", error);
-        throw error;
-    }
-};
-
-const logoutUser = async (userId, updateData) => {
-    try {
-        const db = getDB();
-        await db.collection(COLLECTION_NAME).updateOne(
-            { _id: new ObjectId(userId) },
-            { $set: updateData }
-        );
-    } catch (error) {
-        console.error('Error in logoutUser:', error);
-        throw error;
-    }
-};
-
+//* Get data user (google)
 const getUserBySub = async (sub) => {
     try {
         const db = getDB();
@@ -122,66 +136,8 @@ const getUserBySub = async (sub) => {
     }
 };
 
-const updateUser = async (userId, userData) => {
-    try {
-        const db = getDB();
-        const updateData = {};
-
-        if (userData.username) {
-            const usernameExists = await db.collection(COLLECTION_NAME).findOne({
-                username: userData.username,
-                _id: { $ne: new ObjectId(userId) }
-            });
-            if (usernameExists) {
-                throw new Error("Username already exists");
-            }
-            updateData.username = userData.username;
-        }
-
-        if (userData.email) {
-            const emailExists = await db.collection(COLLECTION_NAME).findOne({
-                email: userData.email,
-                _id: { $ne: new ObjectId(userId) }
-            });
-            if (emailExists) {
-                throw new Error("Email already exists");
-            }
-            updateData.email = userData.email;
-        }
-
-        if (userData.password) {
-            updateData.password = userData.password;
-        }
-
-        updateData.update_at = new Date();
-
-        if (Object.keys(updateData).length === 0) {
-            throw new Error("No valid fields to update");
-        }
-
-        await db.collection(COLLECTION_NAME).updateOne(
-            { _id: new ObjectId(userId) },
-            { $set: updateData }
-        );
-        return updateData;
-    } catch (error) {
-        console.error("Error in updateUser: ", error);
-        throw error;
-    }
-};
-
-const addGoogleUser = async (newUser) => {
-    try {
-        const db = getDB();
-        const result = await db.collection(COLLECTION_NAME).insertOne(newUser);
-        return result.insertedId;
-    } catch (error) {
-        console.error("Error in addGoogleUser: ", error);
-        throw error;
-    }
-}
-
-const updateUserName = async (user_id, username) => {
+//* Update data user
+const updateUsername = async (user_id, username) => {
     try {
         const db = getDB();
         await db.collection(COLLECTION_NAME).updateOne(
@@ -194,16 +150,55 @@ const updateUserName = async (user_id, username) => {
     }
 }
 
+const updateEmail = async (user_id, email) => {
+    try {
+        const db = getDB();
+        await db.collection(COLLECTION_NAME).updateOne(
+            { _id: new ObjectId(user_id) },
+            { $set: { email }}
+        );
+    } catch (error) {
+        console.error("Error updating email: ", error);
+        throw error;
+    }
+};
+
+const updateRole = async (user_id, role) => {
+    try {
+        const db = getDB();
+        await db.collection(COLLECTION_NAME).updateOne(
+            { _id: new ObjectId(user_id) },
+            { $set: { role }}
+        );
+    } catch (error) {
+        console.error("Error updating role: ", error);
+        throw error;
+    }
+};
+
+//* Change Password
+// const changePassword = async (user_id, currentPassword, newPassword) => {
+//     try {
+//         const db = getDB();
+//     } catch (error) {
+//         console.error("Error changing password: ", error);
+//         throw error;
+//     }
+// };
+
+
 module.exports = {
     addUser,
+    confirmEmail,
+    addGoogleUser,
+    updateRefreshToken,
+    logoutUser,
     getUserById,
     getUserByUserName,
     getUserByEmail,
-    updateRefreshToken,
-    logoutUser,
-    updateUser,
     getUserBySub,
-    confirmEmail,
-    addGoogleUser,
-    updateUserName
+    updateUsername,
+    updateEmail,
+    updateRole,
+    // changePassword,
 };
