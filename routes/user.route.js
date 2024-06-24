@@ -32,7 +32,7 @@ router.post('/update-avatar', authToken, userController.updateAvatar);
 router.post('/add-friend', authToken, userController.addFriend);
 router.post('/check-friend', authToken, userController.checkFriendStatus);
 router.post('/del-friend', authToken, userController.delFriend);
-// router.post('/list-friend', authToken, userController.getListFriend);
+router.post('/list-friend', authToken, userController.getListFriend);
 
 //* Get all friend from collection 'user'
 // ! Just for search bar

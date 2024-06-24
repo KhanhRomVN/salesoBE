@@ -213,31 +213,31 @@ const delFriend = async (req, res) => {
     }
 };
 
-// const getListFriend = async (req, res) => {
-//     const user_id = req.user._id.toString();
-//     try {
-//         const friend_idList = await UserModelDetail.getListFriends(user_id);
-//         const friendDataList = [];
-//         for (let i = 0; i < friend_idList.length; i++) {
-//             const user_id = friend_idList[i];
-//             if (user_id !== null) {
-//                 const friendDataResponse = await UserModel.getUserById(user_id);
-//                 if (friendDataResponse == null) {
-//                     continue;
-//                 }
-//                 const friendData = {
-//                     user_id: friendDataResponse._id,
-//                     username: friendDataResponse.username
-//                 };
-//                 friendDataList.push(friendData);
-//             }
-//         }
-//         res.status(200).json({ friendDataList });
-//     } catch (error) {
-//         logger.error('Error fetching friend list:', error);
-//         res.status(500).json({ message: 'Error fetching friend list' });
-//     }
-// };
+const getListFriend = async (req, res) => {
+    const user_id = req.user._id.toString();
+    try {
+        const friend_idList = await UserModelDetail.getListFriends(user_id);
+        const friendDataList = [];
+        for (let i = 0; i < friend_idList.length; i++) {
+            const user_id = friend_idList[i];
+            if (user_id !== null) {
+                const friendDataResponse = await UserModel.getUserById(user_id);
+                if (friendDataResponse == null) {
+                    continue;
+                }
+                const friendData = {
+                    user_id: friendDataResponse._id,
+                    username: friendDataResponse.username
+                };
+                friendDataList.push(friendData);
+            }
+        }
+        res.status(200).json({ friendDataList });
+    } catch (error) {
+        logger.error('Error fetching friend list:', error);
+        res.status(500).json({ message: 'Error fetching friend list' });
+    }
+};
 
 //* Search friends from searchbar
 const getAllFriend = async (req, res) => {
@@ -268,5 +268,6 @@ module.exports = {
     addFriend,
     checkFriendStatus,
     delFriend,
+    getListFriend,
     getAllFriend,
 };

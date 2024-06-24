@@ -106,13 +106,21 @@ const getUserDetailByUserId = async (user_id) => {
     }
 };
 
-// const getListFriends = async (user_id) => {
-//     try {
-//     } catch (error) {
-//         console.error("Error in getListFriends: ", error);
-//         throw error;
-//     }
-// };
+const getListFriends = async (user_id) => {
+    try {
+        const db = getDB();
+    
+        const user = await db.collection(COLLECTION_NAME).findOne({ user_id: user_id });
+        if (!user) {
+          throw new Error(`User with ID ${user_id} not found`);
+        }
+    
+        return user.friendList;
+      } catch (error) {
+        console.error("Error in getListFriends: ", error);
+        throw error;
+      }
+};
 
 module.exports = {
     updateName,
@@ -123,5 +131,5 @@ module.exports = {
     updateAddress,
     updateAvatar,
     getUserDetailByUserId,
-    // getListFriends,
+    getListFriends,
 };
