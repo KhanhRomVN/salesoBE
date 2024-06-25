@@ -6,6 +6,8 @@ const OTPModel = require('../models/OTPModel');
 const crypto = require('crypto');
 const userDetailModel = require('../models/UserDetailModel');
 const logger = require('../config/logger');
+const notificationController = require('../controller/notification.controller')
+const notificationModel = require('../models/NotificationModel');
 
 const generateOTP = () => crypto.randomBytes(3).toString('hex');
 
@@ -79,6 +81,15 @@ const registerUser = async (req, res) => {
         };
 
         await UserModel.addUser(newUser);
+        const user_id = existingUser._id.toString()
+        //* Create Notification For Basic Register
+        const notification = {
+            user_id: user_id,
+            message: "Create basic account successfully",
+            type: 'authentication',
+            status: 'unread'
+        }
+        await notificationModel.createNotification(notification)
         logger.info(`User registered successfully: ${username}`);
         res.status(201).json({ message: 'User registered successfully' });
     } catch (error) {
@@ -143,12 +154,18 @@ const loginGoogleUser = async (req, res) => {
             };
             await userDetailModel.addUserDetail(newUserDetail);
             user = await UserModel.getUserById(userId);
+            const notification = {
+                user_id: userId.toString(),
+                message: 'Create google account successfully',
+                type: 'authentication',
+                status: 'unread'
+            }
+            await notificationModel.createNotification(notification)
         }
-
         const accessToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET_KEY, { expiresIn: '1d' });
         const refreshToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET_KEY, { expiresIn: '7d' });
         await UserModel.updateRefreshToken(user._id, refreshToken);
-
+        
         logger.info(`User logged in with Google: ${email}`);
         res.status(200).json({
             accessToken,

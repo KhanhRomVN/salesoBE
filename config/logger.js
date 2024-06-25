@@ -5,8 +5,8 @@ const DiscordTransport = require('winston-discord-transport').default;
 const env = process.env.NODE_ENV || 'development';
 const logLevel = env === 'production' ? 'warn' : 'debug';
 
-//* Transport xoay vòng tệp log hàng ngày
-const dailyRotateFileTransport = new winston.transports.DailyRotateFile({
+//* Hàm tạo transport xoay vòng tệp log hàng ngày
+const createDailyRotateFileTransport = () => new winston.transports.DailyRotateFile({
     filename: 'logs/application-%DATE%.log',
     datePattern: 'YYYY-MM-DD',
     zippedArchive: true,
@@ -14,16 +14,16 @@ const dailyRotateFileTransport = new winston.transports.DailyRotateFile({
     maxFiles: '14d'
 });
 
-//* Transport ghi log lỗi vào tệp riêng biệt
-const errorFileTransport = new winston.transports.File({
+//* Hàm tạo transport ghi log lỗi vào tệp riêng biệt
+const createErrorFileTransport = () => new winston.transports.File({
     filename: 'logs/error.log',
     level: 'error'
 });
 
-//* Transport gửi log đến Discord cho error, warn và info
-const discordTransportError = new DiscordTransport({
+//* Hàm tạo transport gửi log đến Discord với các mức độ khác nhau
+const createDiscordTransport = (level) => new DiscordTransport({
     webhook: process.env.DISCORD_WEBHOOK_URL,
-    level: 'error',
+    level,
     defaultMeta: { service: 'user-service' },
     format: winston.format.combine(
         winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
@@ -31,26 +31,15 @@ const discordTransportError = new DiscordTransport({
     )
 });
 
-const discordTransportWarn = new DiscordTransport({
-    webhook: process.env.DISCORD_WEBHOOK_URL,
-    level: 'warn',
-    defaultMeta: { service: 'user-service' },
+//* Hàm tạo transport cho console
+const createConsoleTransport = () => new winston.transports.Console({
     format: winston.format.combine(
-        winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-        winston.format.printf(info => `${info.timestamp} [${info.level.toUpperCase()}]: ${info.message}`)
+        winston.format.colorize(),
+        winston.format.simple()
     )
 });
 
-const discordTransportInfo = new DiscordTransport({
-    webhook: process.env.DISCORD_WEBHOOK_URL,
-    level: 'info',
-    defaultMeta: { service: 'user-service' },
-    format: winston.format.combine(
-        winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-        winston.format.printf(info => `${info.timestamp} [${info.level.toUpperCase()}]: ${info.message}`)
-    )
-});
-
+//* Tạo logger với các transport đã định nghĩa
 const logger = winston.createLogger({
     level: logLevel,
     format: winston.format.combine(
@@ -60,17 +49,12 @@ const logger = winston.createLogger({
     ),
     defaultMeta: { service: 'user-service' }, // Thêm metadata mặc định
     transports: [
-        new winston.transports.Console({
-            format: winston.format.combine(
-                winston.format.colorize(),
-                winston.format.simple()
-            )
-        }),
-        dailyRotateFileTransport,
-        errorFileTransport,
-        discordTransportError,
-        discordTransportWarn,
-        discordTransportInfo
+        createConsoleTransport(),
+        createDailyRotateFileTransport(),
+        createErrorFileTransport(),
+        createDiscordTransport('error'),
+        createDiscordTransport('warn'),
+        createDiscordTransport('info')
     ]
 });
 

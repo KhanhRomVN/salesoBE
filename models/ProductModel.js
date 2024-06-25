@@ -19,9 +19,9 @@ const COLLECTION_SCHEMA = Joi.object({
     updatedAt: Joi.date().default(() => new Date()),
 }).options({ abortEarly: false });
 
+
 const addProduct = async (productData) => {
     const db = getDB();
-
     try {
         const slug = slugify(productData.name, { lower: true });
         const validatedProduct = await COLLECTION_SCHEMA.validateAsync({
@@ -81,7 +81,6 @@ const getAllProducts = async () => {
         throw error;
     }
 }
-
 
 module.exports = {
     addProduct,

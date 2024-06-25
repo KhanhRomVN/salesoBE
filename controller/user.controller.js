@@ -1,12 +1,19 @@
 const UserModel = require('../models/UserModel');
 const UserModelDetail = require('../models/UserDetailModel');
 const logger = require('../config/logger');
+const OTPModel = require('../models/OTPModel');
+const crypto = require('crypto');
+const bcryptjs = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const transporter = require('../config/nodemailerConfig');
+
+const generateOTP = () => crypto.randomBytes(3).toString('hex');
 
 //* Get data user
-const getUserDetail = async (req, res) => {
+const getUserData = async (req, res) => {
     const { username } = req.body;
     try {
-        const user = await UserModel.getUserByUserName(username);
+        const user = await UserModel.getUserByUsername(username);
         if (!user) {
             logger.warn(`User with username '${username}' not found`);
             return res.status(404).json({ error: 'User not found' });
@@ -20,6 +27,8 @@ const getUserDetail = async (req, res) => {
             email: user.email,
             role: user.role,
             name: userDetail.name,
+            age: userDetail.age,
+            gender: userDetail.gender,
             about: userDetail.about,
             address: userDetail.address,
             avatar_uri: userDetail.avatar_uri,
@@ -36,6 +45,10 @@ const updateUsername = async (req, res) => {
     const user_id = req.user._id.toString();
     const { username } = req.body;
     try {
+        const isExitingUsername = await UserModel.getUserByUsername(username)
+        if (isExitingUsername) {
+            return res.status(400).json({ error: 'Username already taken' });
+        }
         await UserModel.updateUsername(user_id, username);
         res.status(200).json({ message: 'Update username successfully!' });
     } catch (error) {
@@ -48,6 +61,10 @@ const updateEmail = async (req, res) => {
     const user_id = req.user._id.toString();
     const { email } = req.body;
     try {
+        const isExitingEmail = await UserModel.getUserByEmail(email)
+        if (isExitingEmail) {
+            return res.status(400).json({ error: 'Email already taken' });
+        }
         await UserModel.updateEmail(user_id, email);
         res.status(200).json({ message: 'Update email successfully!' });
     } catch (error) {
@@ -68,18 +85,68 @@ const updateRole = async (req, res) => {
     }
 };
 
-//* Change Password
-// const updatePassword = async (req, res) => {
-//     const user_id = req.user._id.toString();
-//     const { currentPassword, newPassword } = req.body;
-//     try {
-//         await UserModel.changePassword(user_id, currentPassword, newPassword);
-//         res.status(200).json({ message: 'Password changed successfully!' });
-//     } catch (error) {
-//         logger.error('Error changing password:', error);
-//         res.status(500).json({ error: 'Error changing password' });
-//     }
-// };
+//* Change Password For Basic Account
+const updatePassword = async (req, res) => {
+    const user_id = req.user._id.toString();
+    const { currentPassword, newPassword } = req.body;
+    try {
+        await UserModel.updatePassword(user_id, currentPassword, newPassword);
+        res.status(200).json({ message: 'Password changed successfully!' });
+    } catch (error) {
+        logger.error('Error changing password:', error);
+        res.status(500).json({ error: 'Error changing password' });
+    }
+};
+
+const forgetPassword = async (req, res) => {
+    const { email } = req.body;
+    try {
+        const user = await UserModel.getUserByEmail(email);
+        if (!user) {
+            logger.warn(`User with email '${email}' not found`);
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        const otp = generateOTP();
+        await OTPModel.storeOTP(email, otp);
+
+        await transporter.sendMail({
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: 'Password Reset OTP',
+            html: `<p>Your OTP code is: ${otp}</p>`
+        });
+
+        logger.info(`OTP sent to email: ${email}`);
+        res.status(200).json({ message: 'OTP sent to email' });
+    } catch (error) {
+        logger.error('Forget Password Error:', error);
+        res.status(500).json({ error: 'Forget Password Error' });
+    }
+};
+
+const updateForgetPassword = async (req, res) => {
+    const { email, otp, newPassword } = req.body;
+    try {
+        const validOTP = await OTPModel.verifyOTP(email, otp);
+        if (!validOTP) {
+            logger.warn(`Invalid OTP for email: ${email}`);
+            return res.status(400).json({ error: 'Invalid OTP' });
+        }
+
+        const user = await UserModel.getUserByEmail(email);
+        if (!user) {
+            logger.warn(`User with email '${email}' not found`);
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        await UserModel.updateForgetPassword(user._id, newPassword);
+        res.status(200).json({ message: 'Password reset successfully!' });
+    } catch (error) {
+        logger.error('Error resetting password:', error);
+        res.status(500).json({ error: 'Error resetting password' });
+    }
+};
 
 //* Update user detail data
 const updateName = async (req, res) => {
@@ -97,7 +164,6 @@ const updateName = async (req, res) => {
 const updateAge = async (req, res) => {
     const user_id = req.user._id.toString();
     const { age } = req.body;
-    logger.info(age);
     try {
         await UserModelDetail.updateAge(user_id, age);
         res.status(200).json({ message: 'Update age successfully!' });
@@ -128,18 +194,6 @@ const updateAbout = async (req, res) => {
     } catch (error) {
         logger.error('Error updating about:', error);
         res.status(500).json({ error: 'Error updating about' });
-    }
-};
-
-const updatePhone = async (req, res) => {
-    const user_id = req.user._id.toString();
-    const { phone_number } = req.body;
-    try {
-        await UserModelDetail.updatePhone(user_id, phone_number);
-        res.status(200).json({ message: 'Update phone number successfully!' });
-    } catch (error) {
-        logger.error('Error updating phone number:', error);
-        res.status(500).json({ error: 'Error updating phone number' });
     }
 };
 
@@ -240,28 +294,19 @@ const getListFriend = async (req, res) => {
     }
 };
 
-//* Search friends from searchbar
-const getAllFriend = async (req, res) => {
-    try {
-        const allFriend = await UserModel.getAllFriend();
-        res.status(200).json(allFriend);
-    } catch (error) {
-        logger.error('Error getting all friends:', error);
-        res.status(500).json({ message: 'Error getting all friends' });
-    }
-};
 
 module.exports = {
-    getUserDetail,
+    getUserData,
     updateUsername,
     updateEmail,
     updateRole,
-    // updatePassword,
+    updatePassword,
+    forgetPassword,
+    updateForgetPassword,
     updateName,
     updateAge,
     updateGender,
     updateAbout,
-    updatePhone,
     updateAddress,
     updateAvatar,
     // checkGoogle,
@@ -270,5 +315,4 @@ module.exports = {
     checkFriendStatus,
     delFriend,
     getListFriend,
-    getAllFriend,
 };

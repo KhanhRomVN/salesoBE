@@ -54,18 +54,6 @@ const updateAbout = async (user_id, about) => {
         throw error;
     }
 };
-const updatePhone = async (user_id, phone_number) => {
-    try {
-        const db = getDB();
-        await db.collection(COLLECTION_NAME).updateOne(
-            { user_id },
-            { $set: { phone_number }}
-        );
-    } catch (error) {
-        console.error("Error updating phone number: ", error);
-        throw error;
-    }
-};
 
 const updateAddress = async (user_id, address) => {
     try {
@@ -126,7 +114,6 @@ module.exports = {
     updateAge,
     updateGender,
     updateAbout,
-    updatePhone,
     updateAddress,
     updateAvatar,
     getUserDetailByUserId,

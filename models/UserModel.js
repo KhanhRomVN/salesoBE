@@ -1,5 +1,7 @@
 const Joi = require('joi');
 const { ObjectId } = require('mongodb');
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
 const { getDB } = require('../config/mongoDB');
 const COLLECTION_NAME = 'users';
 const COLLECTION_SCHEMA = Joi.object({
@@ -34,10 +36,11 @@ const addUser = async (userData) => {
     try {
         validateUser(userData);
         const db = getDB();
-        await db.collection(COLLECTION_NAME).updateOne(
+        const user = await db.collection(COLLECTION_NAME).updateOne(
             { email },
             { $set: tempUserData }
         );
+        console.log(user);
     } catch (error) {
         console.error("Error in addUser: ", error);
         throw error;
@@ -107,7 +110,7 @@ const getUserById = async (userId) => {
     }
 };
 
-const getUserByUserName = async (username) => {
+const getUserByUsername = async (username) => {
     try {
         const db = getDB();
         return await db.collection(COLLECTION_NAME).findOne({ username });
@@ -176,15 +179,41 @@ const updateRole = async (user_id, role) => {
     }
 };
 
-//* Change Password
-// const changePassword = async (user_id, currentPassword, newPassword) => {
-//     try {
-//         const db = getDB();
-//     } catch (error) {
-//         console.error("Error changing password: ", error);
-//         throw error;
-//     }
-// };
+const updatePassword = async (user_id, currentPassword, newPassword) => {
+    try {
+        const db = getDB();
+        const user = await getUserById(user_id);
+        if (!user) {
+            throw new Error('User not found');
+        }
+        const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+        if (!isPasswordValid) {
+            throw new Error('Current password is incorrect');
+        }
+        const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+        await db.collection(COLLECTION_NAME).updateOne(
+            { _id: new ObjectId(user_id) },
+            { $set: { password: hashedPassword } }
+        );
+    } catch (error) {
+        console.error('Error in changePassword:', error);
+        throw error;
+    }
+};
+
+const updateForgetPassword = async (user_id, newPassword) => {
+    try {
+        const db = getDB();
+        const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+        await db.collection(COLLECTION_NAME).updateOne(
+            { _id: new ObjectId(user_id) },
+            { $set: { password: hashedPassword } }
+        );
+    } catch (error) {
+        console.error('Error in updatePassword:', error);
+        throw error;
+    }
+};
 
 
 module.exports = {
@@ -194,11 +223,12 @@ module.exports = {
     updateRefreshToken,
     logoutUser,
     getUserById,
-    getUserByUserName,
+    getUserByUsername,
     getUserByEmail,
     getUserBySub,
     updateUsername,
     updateEmail,
     updateRole,
-    // changePassword,
+    updatePassword,
+    updateForgetPassword
 };
