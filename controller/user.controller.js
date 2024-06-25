@@ -148,7 +148,7 @@ const sendFriendRequest = async (req, res) => {
     const user_id = req.user._id;
     const { friendId } = req.body;
     try {
-        // Implementation for sending friend request
+        await UserDetailModel.sendFriendRequest(user_id, friendId);
         res.status(200).json({ message: 'Friend request sent successfully!' });
     } catch (error) {
         logger.error('Error sending friend request:', error);
@@ -160,7 +160,7 @@ const acceptRequest = async (req, res) => {
     const user_id = req.user._id;
     const { friendId } = req.body;
     try {
-        // Implementation for accepting friend request
+        await UserDetailModel.acceptFriendRequest(user_id, friendId);
         res.status(200).json({ message: 'Friend request accepted successfully!' });
     } catch (error) {
         logger.error('Error accepting friend request:', error);
@@ -172,7 +172,7 @@ const refuseRequest = async (req, res) => {
     const user_id = req.user._id;
     const { friendId } = req.body;
     try {
-        // Implementation for refusing friend request
+        await UserDetailModel.refuseFriendRequest(user_id, friendId);
         res.status(200).json({ message: 'Friend request refused successfully!' });
     } catch (error) {
         logger.error('Error refusing friend request:', error);
@@ -182,10 +182,10 @@ const refuseRequest = async (req, res) => {
 
 const checkFriendStatus = async (req, res) => {
     const user_id = req.user._id;
-    const { friendId } = req.body;
+    const { friendId } = req.query;
     try {
-        // Implementation for checking friend status
-        res.status(200).json({ friendStatus: 'Friend' });
+        const status = await UserDetailModel.checkFriendStatus(user_id, friendId);
+        res.status(200).json({ friendStatus: status });
     } catch (error) {
         logger.error('Error checking friend status:', error);
         res.status(500).json({ error: 'Error checking friend status' });
@@ -195,8 +195,8 @@ const checkFriendStatus = async (req, res) => {
 const getListFriend = async (req, res) => {
     const user_id = req.user._id;
     try {
-        // Implementation for getting list of friends
-        res.status(200).json({ friends: [] });
+        const friends = await UserDetailModel.getListFriends(user_id);
+        res.status(200).json({ friends });
     } catch (error) {
         logger.error('Error getting list of friends:', error);
         res.status(500).json({ error: 'Error getting list of friends' });
@@ -207,7 +207,7 @@ const unfriend = async (req, res) => {
     const user_id = req.user._id;
     const { friendId } = req.body;
     try {
-        // Implementation for unfriending a user
+        await UserDetailModel.unfriend(user_id, friendId);
         res.status(200).json({ message: 'Unfriended successfully!' });
     } catch (error) {
         logger.error('Error unfriending:', error);
@@ -219,7 +219,7 @@ const blockFriend = async (req, res) => {
     const user_id = req.user._id;
     const { friendId } = req.body;
     try {
-        // Implementation for blocking a friend
+        await UserDetailModel.blockFriend(user_id, friendId);
         res.status(200).json({ message: 'Blocked successfully!' });
     } catch (error) {
         logger.error('Error blocking friend:', error);
@@ -231,7 +231,7 @@ const unblockFriend = async (req, res) => {
     const user_id = req.user._id;
     const { friendId } = req.body;
     try {
-        // Implementation for unblocking a friend
+        await UserDetailModel.unblockFriend(user_id, friendId);
         res.status(200).json({ message: 'Unblocked successfully!' });
     } catch (error) {
         logger.error('Error unblocking friend:', error);

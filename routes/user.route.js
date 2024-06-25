@@ -39,5 +39,6 @@ router.post('/unfriend', authToken, userController.unfriend);
 
 //* Block Friend
 router.post('/block-friend', authToken, userController.blockFriend);
+router.post('/unblock-friend', authToken, userController.unblockFriend);
 
 module.exports = router;
