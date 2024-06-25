@@ -6,9 +6,22 @@ const COLLECTION_NAME = 'reviews';
 const COLLECTION_SCHEMA = Joi.object({
     prod_id: Joi.string().required(),
     user_id: Joi.string().required(),
-    reviewComment: Joi.string().required(),
-    created_at: Joi.date().required()
+    comment: Joi.string().required(),
+    rate: Joi.number().min(1).max(5).required(),
+    createdAt: Joi.date().default(() => new Date()),
+    updatedAt: Joi.date().default(() => new Date())
 }).options({ abortEarly: false });
+
+const addReview = async (reviewData) => {
+    const db = getDB();
+    try {
+        const validatedReview = await COLLECTION_SCHEMA.validateAsync(reviewData);
+        await db.collection(COLLECTION_NAME).insertOne(validatedReview);
+    } catch (error) {
+        console.error("Error in addReview: ", error);
+        throw error;
+    }
+}
 
 const getReviewsByProductId = async (prod_id) => {
     const db = getDB();
@@ -21,34 +34,38 @@ const getReviewsByProductId = async (prod_id) => {
     }
 }
 
-const addReview = async (reviewData) => {
+const getReviewsByUserId = async (user_id) => {
     const db = getDB();
     try {
-        const { error } = COLLECTION_SCHEMA.validate(reviewData);
-        if (error) {
-            throw new Error(`Invalid review data: ${error.message}`);
-        }
-
-        const result = await db.collection(COLLECTION_NAME).insertOne(reviewData);
-        return result.insertedId;
+        const reviews = await db.collection(COLLECTION_NAME).find({ user_id }).toArray();
+        return reviews;
     } catch (error) {
-        console.error("Error adding review:", error);
+        console.error("Error getting reviews by user id:", error);
         throw error;
     }
 }
 
-const getReviewById = async (review_id) => {
+const updateComment = async (review_id, comment) => {
     const db = getDB();
     try {
-        const review = await db.collection(COLLECTION_NAME).findOne({ _id: new ObjectId(review_id) });
-        return review;
+        await db.collection(COLLECTION_NAME).updateOne({ _id: new ObjectId(review_id) }, { $set: { comment, updatedAt: new Date() } });
     } catch (error) {
-        console.error("Error getting review by id:", error);
+        console.error("Error updating comment:", error);
         throw error;
     }
 }
 
-const deleteReview = async (review_id) => {
+const updateRate = async (review_id, rate) => {
+    const db = getDB();
+    try {
+        await db.collection(COLLECTION_NAME).updateOne({ _id: new ObjectId(review_id) }, { $set: { rate, updatedAt: new Date() } });
+    } catch (error) {
+        console.error("Error updating rate:", error);
+        throw error;
+    }
+}
+
+const delReview = async (review_id) => {
     const db = getDB();
     try {
         await db.collection(COLLECTION_NAME).deleteOne({ _id: new ObjectId(review_id) });
@@ -59,8 +76,10 @@ const deleteReview = async (review_id) => {
 }
 
 module.exports = {
-    getReviewsByProductId,
     addReview,
-    getReviewById,
-    deleteReview
+    getReviewsByProductId,
+    getReviewsByUserId,
+    updateComment,
+    updateRate,
+    delReview
 };

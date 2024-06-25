@@ -4,11 +4,11 @@ const { ObjectId } = require('mongodb');
 
 const COLLECTION_NAME = 'chats';
 const COLLECTION_SCHEMA = Joi.object({
-    participants: Joi.array().items(Joi.string()).length(2),
+    participants: Joi.array().items(Joi.string()).length(2).required(),
     last_message: Joi.object({
         message_id: Joi.string().required(),
         timestamp: Joi.date().required(),
-    }),
+    }).allow(null),
     created_at: Joi.date().required(),
     updated_at: Joi.date().required()
 }).options({ abortEarly: false });
@@ -16,7 +16,7 @@ const COLLECTION_SCHEMA = Joi.object({
 const getChatBox = async (userA, userB) => {
     const db = getDB();
     try {
-        const chat = await db.collection(COLLECTION_NAME).findOne({
+        let chat = await db.collection(COLLECTION_NAME).findOne({
             participants: { $all: [userA, userB] }
         });
 
@@ -29,7 +29,7 @@ const getChatBox = async (userA, userB) => {
             };
 
             const result = await db.collection(COLLECTION_NAME).insertOne(newChat);
-            return result
+            chat = result.ops[0];
         }
         return chat;
     } catch (error) {
@@ -42,23 +42,16 @@ const addLastMessage = async (chat_id, last_message) => {
     const db = getDB();
     try {
         const result = await db.collection(COLLECTION_NAME).findOneAndUpdate(
-          { _id: new ObjectId(chat_id) },
-          { $set: { last_message: last_message } },
-          { returnOriginal: false } 
+            { _id: new ObjectId(chat_id) },
+            { $set: { last_message: last_message, updated_at: new Date() } },
+            { returnOriginal: false }
         );
-    
-        if (result.last_message === last_message) {
-          console.log('Updated last message:', result.value);
-          return result.value;
-        } else {
-          console.log('Chat not found with chat_id:', chat_id);
-          return null;
-        }
-      } catch (error) {
+        return result.value;
+    } catch (error) {
         console.error('Error updating last message:', error);
         throw error;
-      }
-}
+    }
+};
 
 module.exports = {
     getChatBox,

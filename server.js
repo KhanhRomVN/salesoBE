@@ -1,21 +1,31 @@
+//* NPM Package
 const express = require('express');
 require('dotenv').config();
 const cookiesParser = require('cookie-parser');
+const helmet = require('helmet');
+const compression = require('compression');
+
+//* CORS 
 const cors = require('cors');
 const whiteList = process.env.WHITE_LIST.split(',');
+
+//* MongoDB
 const { connectDB } = require('./config/mongoDB');
+
+//* Socket IO
 const http = require('http');
 const socketIo = require('socket.io');
 const socketHandler = require('./socket/index');
+
+//* Endpoint API
+const adminRoute = require('./routes/admin.route');
 const authRoute = require('./routes/auth.route');
 const userRoute = require('./routes/user.route');
 const productRoute = require('./routes/product.route');
-const adminRoute = require('./routes/admin.route');
+const reviewRoute = require('./routes/review.route')
 const chatRoute = require('./routes/chat.route');
 const cartRoute = require('./routes/cart.route');
 const notificationRoute = require('./routes/notification.route');
-const helmet = require('helmet');
-const compression = require('compression');
 
 const corsOptions = {
   origin: function (origin, callback) {
@@ -44,12 +54,14 @@ app.get('/', (req, res) => {
     message: "Server running at " + process.env.PORT
   });
 });
-app.use('/auth', authRoute);
-app.use('/product', productRoute);
-app.use('/user', userRoute);
+
 app.use('/admin', adminRoute);
-app.use('/chat', chatRoute);
+app.use('/auth', authRoute);
+app.use('/user', userRoute);
+app.use('/product', productRoute);
+app.use('/review', reviewRoute);
 app.use('/cart', cartRoute);
+app.use('/chat', chatRoute);
 app.use('/notification', notificationRoute);
 
 socketHandler(io);

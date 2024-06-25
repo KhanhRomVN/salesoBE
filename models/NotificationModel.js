@@ -5,6 +5,7 @@ const COLLECTION_NAME = 'notifications';
 
 const notificationSchema = Joi.object({
     user_id: Joi.string().required(),
+    address_id: Joi.string().required(),
     message: Joi.string().required(),
     type: Joi.string().required(),
     status: Joi.string().valid('read', 'unread').default('unread'),

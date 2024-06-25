@@ -1,9 +1,8 @@
 const UserModel = require('../models/UserModel');
 const ProductModel = require('../models/ProductModel');
-const ReviewModel = require('../models/ReviewModel');
 const logger = require('../config/logger');
 
-//* --------------- Product ---------------------
+//* Add Product
 const addProduct = async (req, res) => {
     const { name, image, description, price, category, inventory } = req.body;
     const user_id = req.user._id.toString();
@@ -39,6 +38,7 @@ const addProduct = async (req, res) => {
     }
 }
 
+//* Get Product
 const getProductByProductId = async (req, res) => {
     const { prod_id } = req.body;
     try {
@@ -51,10 +51,8 @@ const getProductByProductId = async (req, res) => {
     }
 }
 
-//* ----------------- List Products ----------------
 const getListOfProductByUserId = async (req, res) => {
     const userId = req.user._id.toString();
-
     try {
         const products = await ProductModel.getProductsByUserId(userId);
         logger.info(`Retrieved products by userId: ${userId}`);
@@ -67,7 +65,6 @@ const getListOfProductByUserId = async (req, res) => {
 
 const getListOfProductByCategory = async (req, res) => {
     const { category } = req.body;
-
     try {
         const products = await ProductModel.getProductsByCategory(category);
         logger.info(`Retrieved products by category: ${category}`);
@@ -89,55 +86,121 @@ const getAllProducts = async (req, res) => {
     }
 }
 
-//* ------------------ Review -------------------
-const getReviews = async (req, res) => {
+//* Update Product
+const updateName = async (req, res) => {
+    const user_id = req.user._id.toString(); 
+    const { prod_id, name } = req.body;
+    try {
+        await ProductModel.updateName(user_id, prod_id, name);
+        logger.info(`Updated product name: ${prod_id}`);
+        res.status(200).json({ message: "Product name updated successfully" });
+    } catch (error) {
+        logger.error('Error updating product name:', error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+}
+
+const updateImage = async (req, res) => {
+    const user_id = req.user._id.toString(); 
+    const { prod_id, image } = req.body;
+    try {
+        await ProductModel.updateImage(user_id, prod_id, image);
+        logger.info(`Updated product image: ${prod_id}`);
+        res.status(200).json({ message: "Product image updated successfully" });
+    } catch (error) {
+        logger.error('Error updating product image:', error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+}
+
+const updateDesc = async (req, res) => {
+    const user_id = req.user._id.toString(); 
+    const { prod_id, description } = req.body;
+    try {
+        await ProductModel.updateDesc(user_id, prod_id, description);
+        logger.info(`Updated product description: ${prod_id}`);
+        res.status(200).json({ message: "Product description updated successfully" });
+    } catch (error) {
+        logger.error('Error updating product description:', error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+}
+
+const updatePrice = async (req, res) => {
+    const user_id = req.user._id.toString(); 
+    const { prod_id, price } = req.body;
+    try {
+        await ProductModel.updatePrice(user_id, prod_id, price);
+        logger.info(`Updated product price: ${prod_id}`);
+        res.status(200).json({ message: "Product price updated successfully" });
+    } catch (error) {
+        logger.error('Error updating product price:', error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+}
+
+const updateCategory = async (req, res) => {
+    const user_id = req.user._id.toString(); 
+    const { prod_id, category } = req.body;
+    try {
+        await ProductModel.updateCategory(user_id, prod_id, category);
+        logger.info(`Updated product category: ${prod_id}`);
+        res.status(200).json({ message: "Product category updated successfully" });
+    } catch (error) {
+        logger.error('Error updating product category:', error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+}
+
+const updateInventory = async (req, res) => {
+    const user_id = req.user._id.toString(); 
+    const { prod_id, inventory } = req.body;
+    try {
+        await ProductModel.updateInventory(user_id, prod_id, inventory);
+        logger.info(`Updated product inventory: ${prod_id}`);
+        res.status(200).json({ message: "Product inventory updated successfully" });
+    } catch (error) {
+        logger.error('Error updating product inventory:', error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+}
+
+const updateStatus = async (req, res) => {
+    const user_id = req.user._id.toString(); 
+    const { prod_id, status } = req.body;
+    try {
+        await ProductModel.updateStatus(user_id, prod_id, status);
+        logger.info(`Updated product status: ${prod_id}`);
+        res.status(200).json({ message: "Product status updated successfully" });
+    } catch (error) {
+        logger.error('Error updating product status:', error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+}
+
+//* Delete Product
+const deleteProduct = async (req, res) => {
+    const user_id = req.user._id.toString(); 
     const { prod_id } = req.body;
     try {
-        const reviews = await ReviewModel.getReviewsByProductId(prod_id);
-        logger.info(`Retrieved reviews for product: ${prod_id}`);
-        res.status(200).json({ reviews });
+        await ProductModel.deleteProduct(user_id, prod_id);
+        logger.info(`Deleted product: ${prod_id}`);
+        res.status(200).json({ message: "Product deleted successfully" });
     } catch (error) {
-        logger.error('Error getting reviews:', error);
+        logger.error('Error deleting product:', error);
         res.status(500).json({ error: "Internal Server Error" });
     }
 }
 
-const commentReview = async (req, res) => {
-    const { prod_id, reviewComment } = req.body;
-    const userId = req.user._id.toString();
+const deleteListProduct = async (req, res) => {
+    const user_id = req.user._id.toString(); 
+    const { list_prod_id } = req.body;
     try {
-        const reviewData = {
-            prod_id,
-            user_id: userId,
-            reviewComment,
-            created_at: new Date()
-        };
-
-        await ReviewModel.addReview(reviewData);
-        logger.info(`Added review for product: ${prod_id}`);
-        res.status(201).json({ reviewData });
+        await ProductModel.deleteListProduct(user_id, list_prod_id);
+        logger.info(`Deleted products: ${list_prod_id}`);
+        res.status(200).json({ message: "Products deleted successfully" });
     } catch (error) {
-        logger.error('Error adding review:', error);
-        res.status(500).json({ error: "Internal Server Error" });
-    }
-}
-
-const delReview = async (req, res) => {
-    const { review_id } = req.body;
-    const userId = req.user._id.toString();
-    try {
-        const review = await ReviewModel.getReviewById(review_id);
-
-        if (!review || review.user_id !== userId) {
-            logger.warn(`Unauthorized attempt to delete review: ${review_id}`);
-            return res.status(401).json({ error: "Unauthorized" });
-        }
-
-        await ReviewModel.deleteReview(review_id);
-        logger.info(`Deleted review successfully: ${review_id}`);
-        res.status(200).json({ message: "Review deleted successfully" });
-    } catch (error) {
-        logger.error('Error deleting review:', error);
+        logger.error('Error deleting products:', error);
         res.status(500).json({ error: "Internal Server Error" });
     }
 }
@@ -148,7 +211,13 @@ module.exports = {
     getListOfProductByCategory,
     getListOfProductByUserId,
     getAllProducts,
-    getReviews,
-    commentReview,
-    delReview
+    updateName,
+    updateImage,
+    updateDesc,
+    updatePrice,
+    updateCategory,
+    updateInventory,
+    updateStatus,
+    deleteProduct,
+    deleteListProduct
 };

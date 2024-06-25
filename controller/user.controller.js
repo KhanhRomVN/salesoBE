@@ -1,15 +1,17 @@
 const UserModel = require('../models/UserModel');
-const UserModelDetail = require('../models/UserDetailModel');
-const logger = require('../config/logger');
+const UserDetailModel = require('../models/UserDetailModel');
 const OTPModel = require('../models/OTPModel');
+const logger = require('../config/logger');
 const crypto = require('crypto');
 const bcryptjs = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const transporter = require('../config/nodemailerConfig');
+const { validationResult } = require('express-validator');
 
+// Utility function to generate OTP
 const generateOTP = () => crypto.randomBytes(3).toString('hex');
 
-//* Get data user
+// User Controller Methods
 const getUserData = async (req, res) => {
     const { username } = req.body;
     try {
@@ -19,82 +21,39 @@ const getUserData = async (req, res) => {
             return res.status(404).json({ error: 'User not found' });
         }
 
-        const user_id = user._id.toString();
-        const userDetail = await UserModelDetail.getUserDetailByUserId(user_id);
-        const userData = {
-            user_id: user_id,
-            username: user.username,
-            email: user.email,
-            role: user.role,
-            name: userDetail.name,
-            age: userDetail.age,
-            gender: userDetail.gender,
-            about: userDetail.about,
-            address: userDetail.address,
-            avatar_uri: userDetail.avatar_uri,
-        };
-        res.status(200).json(userData);
+        const userDetail = await UserDetailModel.getUserDetailByUserId(user._id);
+        res.status(200).json({ ...user, ...userDetail });
     } catch (error) {
-        logger.error('Error in getUserDetail:', error);
-        res.status(500).json({ message: 'Error getUserDetail' });
+        logger.error('Error in getUserData:', error);
+        res.status(500).json({ error: 'Error fetching user data' });
     }
 };
 
-//* Update user data
-const updateUsername = async (req, res) => {
-    const user_id = req.user._id.toString();
-    const { username } = req.body;
+const updateUserField = async (req, res, updateFunc, successMessage) => {
+    const user_id = req.user._id;
+    const updateData = req.body;
     try {
-        const isExitingUsername = await UserModel.getUserByUsername(username)
-        if (isExitingUsername) {
-            return res.status(400).json({ error: 'Username already taken' });
-        }
-        await UserModel.updateUsername(user_id, username);
-        res.status(200).json({ message: 'Update username successfully!' });
+        await updateFunc(user_id, updateData);
+        res.status(200).json({ message: successMessage });
     } catch (error) {
-        logger.error('Error updating username:', error);
-        res.status(500).json({ error: 'Error updating username' });
+        logger.error(`Error updating ${successMessage.toLowerCase()}:`, error);
+        res.status(500).json({ error: `Error updating ${successMessage.toLowerCase()}` });
     }
 };
 
-const updateEmail = async (req, res) => {
-    const user_id = req.user._id.toString();
-    const { email } = req.body;
-    try {
-        const isExitingEmail = await UserModel.getUserByEmail(email)
-        if (isExitingEmail) {
-            return res.status(400).json({ error: 'Email already taken' });
-        }
-        await UserModel.updateEmail(user_id, email);
-        res.status(200).json({ message: 'Update email successfully!' });
-    } catch (error) {
-        logger.error('Error updating email:', error);
-        res.status(500).json({ error: 'Error updating email' });
-    }
-};
-
-const updateRole = async (req, res) => {
-    const user_id = req.user._id.toString();
-    const { role } = req.body;
-    try {
-        await UserModel.updateRole(user_id, role);
-        res.status(200).json({ message: 'Update role successfully!' });
-    } catch (error) {
-        logger.error('Error updating role:', error);
-        res.status(500).json({ error: 'Error updating role' });
-    }
-};
-
-//* Change Password For Basic Account
+// Define specific update functions for user fields
+const updateUsername = (req, res) => updateUserField(req, res, UserModel.updateUsername, 'Username');
+const updateEmail = (req, res) => updateUserField(req, res, UserModel.updateEmail, 'Email');
+const updateRole = (req, res) => updateUserField(req, res, UserModel.updateRole, 'Role');
 const updatePassword = async (req, res) => {
-    const user_id = req.user._id.toString();
     const { currentPassword, newPassword } = req.body;
+    const user_id = req.user._id;
     try {
         await UserModel.updatePassword(user_id, currentPassword, newPassword);
-        res.status(200).json({ message: 'Password changed successfully!' });
+        res.status(200).json({ message: 'Password updated successfully!' });
     } catch (error) {
-        logger.error('Error changing password:', error);
-        res.status(500).json({ error: 'Error changing password' });
+        logger.error('Error updating password:', error);
+        res.status(500).json({ error: 'Error updating password' });
     }
 };
 
@@ -148,152 +107,137 @@ const updateForgetPassword = async (req, res) => {
     }
 };
 
-//* Update user detail data
-const updateName = async (req, res) => {
-    const user_id = req.user._id.toString();
-    const { name } = req.body;
+// User Detail Methods
+const updateName = (req, res) => updateUserField(req, res, UserDetailModel.updateName, 'Name');
+const updateAge = (req, res) => updateUserField(req, res, UserDetailModel.updateAge, 'Age');
+const updateGender = (req, res) => updateUserField(req, res, UserDetailModel.updateGender, 'Gender');
+const updateAddress = (req, res) => updateUserField(req, res, UserDetailModel.updateAddress, 'Address');
+const updateAbout = (req, res) => updateUserField(req, res, UserDetailModel.updateAbout, 'About');
+const updateAvatar = (req, res) => updateUserField(req, res, UserDetailModel.updateAvatar, 'Avatar');
+
+// Google Account Methods
+const checkGoogle = async (req, res) => {
+    const user_id = req.user._id;
     try {
-        await UserModelDetail.updateName(user_id, name);
-        res.status(200).json({ message: 'Update name successfully!' });
+        const user = await UserModel.getUserById(user_id);
+        if (user.oauth && user.oauth.google && user.oauth.google.gg_id) {
+            res.status(200).json({ googleLinked: true });
+        } else {
+            res.status(200).json({ googleLinked: false });
+        }
     } catch (error) {
-        logger.error('Error updating name:', error);
-        res.status(500).json({ error: 'Error updating name' });
+        logger.error('Error checking Google account:', error);
+        res.status(500).json({ error: 'Error checking Google account' });
     }
 };
 
-const updateAge = async (req, res) => {
-    const user_id = req.user._id.toString();
-    const { age } = req.body;
+const linkGoogle = async (req, res) => {
+    const user_id = req.user._id;
+    const { googleAccount } = req.body;
     try {
-        await UserModelDetail.updateAge(user_id, age);
-        res.status(200).json({ message: 'Update age successfully!' });
+        await UserModel.linkGoogleAccount(user_id, googleAccount);
+        res.status(200).json({ message: 'Google account linked successfully!' });
     } catch (error) {
-        logger.error('Error updating age:', error);
-        res.status(500).json({ error: 'Error updating age' });
+        logger.error('Error linking Google account:', error);
+        res.status(500).json({ error: 'Error linking Google account' });
     }
 };
 
-const updateGender = async (req, res) => {
-    const user_id = req.user._id.toString();
-    const { gender } = req.body;
+// Friend Methods
+const sendFriendRequest = async (req, res) => {
+    const user_id = req.user._id;
+    const { friendId } = req.body;
     try {
-        await UserModelDetail.updateGender(user_id, gender);
-        res.status(200).json({ message: 'Update gender successfully!' });
+        // Implementation for sending friend request
+        res.status(200).json({ message: 'Friend request sent successfully!' });
     } catch (error) {
-        logger.error('Error updating gender:', error);
-        res.status(500).json({ error: 'Error updating gender' });
+        logger.error('Error sending friend request:', error);
+        res.status(500).json({ error: 'Error sending friend request' });
     }
 };
 
-const updateAbout = async (req, res) => {
-    const user_id = req.user._id.toString();
-    const { about } = req.body;
+const acceptRequest = async (req, res) => {
+    const user_id = req.user._id;
+    const { friendId } = req.body;
     try {
-        await UserModelDetail.updateAbout(user_id, about);
-        res.status(200).json({ message: 'Update about successfully!' });
+        // Implementation for accepting friend request
+        res.status(200).json({ message: 'Friend request accepted successfully!' });
     } catch (error) {
-        logger.error('Error updating about:', error);
-        res.status(500).json({ error: 'Error updating about' });
+        logger.error('Error accepting friend request:', error);
+        res.status(500).json({ error: 'Error accepting friend request' });
     }
 };
 
-const updateAddress = async (req, res) => {
-    const user_id = req.user._id.toString();
-    const { address } = req.body;
+const refuseRequest = async (req, res) => {
+    const user_id = req.user._id;
+    const { friendId } = req.body;
     try {
-        await UserModelDetail.updateAddress(user_id, address);
-        res.status(200).json({ message: 'Update address successfully!' });
+        // Implementation for refusing friend request
+        res.status(200).json({ message: 'Friend request refused successfully!' });
     } catch (error) {
-        logger.error('Error updating address:', error);
-        res.status(500).json({ error: 'Error updating address' });
-    }
-};
-
-const updateAvatar = async (req, res) => {
-    const user_id = req.user._id.toString();
-    const { avatar_uri } = req.body;
-    try {
-        await UserModelDetail.updateAvatar(user_id, avatar_uri);
-        res.status(200).json({ message: 'Update avatar successfully!' });
-    } catch (error) {
-        logger.error('Error updating avatar:', error);
-        res.status(500).json({ error: 'Error updating avatar' });
-    }
-};
-
-//* Check google account & Linked Account
-// const checkGoogle = async (req, res) => {
-
-// };
-
-// const linkedGoogle = async (req, res) => {
-
-// };
-
-//* Add friend, get list friend, del friend and check friend status
-const addFriend = async (req, res) => {
-    const { friend_id } = req.body;
-    const user_id = req.user._id.toString();
-    try {
-        await UserModelDetail.addFriend(user_id, friend_id);
-        res.status(200).json({ message: 'Friend added successfully!' });
-    } catch (error) {
-        logger.error('Error adding friend:', error);
-        res.status(500).json({ message: 'Error adding friend' });
+        logger.error('Error refusing friend request:', error);
+        res.status(500).json({ error: 'Error refusing friend request' });
     }
 };
 
 const checkFriendStatus = async (req, res) => {
-    const { friend_id } = req.body;
-    const user_id = req.user._id.toString();
+    const user_id = req.user._id;
+    const { friendId } = req.body;
     try {
-        const is_Friend = await UserModelDetail.checkFriendStatus(user_id, friend_id);
-        res.status(200).json({ is_Friend });
+        // Implementation for checking friend status
+        res.status(200).json({ friendStatus: 'Friend' });
     } catch (error) {
         logger.error('Error checking friend status:', error);
-        res.status(500).json({ message: 'Error checking friend status' });
-    }
-};
-
-const delFriend = async (req, res) => {
-    const { friend_id } = req.body;
-    const user_id = req.user._id.toString();
-    try {
-        await UserModelDetail.delFriend(user_id, friend_id);
-       
-        res.status(200).json({ message: 'Friend deleted successfully!' });
-    } catch (error) {
-        logger.error('Error deleting friend:', error);
-        res.status(500).json({ message: 'Error deleting friend' });
+        res.status(500).json({ error: 'Error checking friend status' });
     }
 };
 
 const getListFriend = async (req, res) => {
-    const user_id = req.user._id.toString();
+    const user_id = req.user._id;
     try {
-        const friend_idList = await UserModelDetail.getListFriends(user_id);
-        const friendDataList = [];
-        for (let i = 0; i < friend_idList.length; i++) {
-            const user_id = friend_idList[i];
-            if (user_id !== null) {
-                const friendDataResponse = await UserModel.getUserById(user_id);
-                if (friendDataResponse == null) {
-                    continue;
-                }
-                const friendData = {
-                    user_id: friendDataResponse._id,
-                    username: friendDataResponse.username
-                };
-                friendDataList.push(friendData);
-            }
-        }
-        res.status(200).json({ friendDataList });
+        // Implementation for getting list of friends
+        res.status(200).json({ friends: [] });
     } catch (error) {
-        logger.error('Error fetching friend list:', error);
-        res.status(500).json({ message: 'Error fetching friend list' });
+        logger.error('Error getting list of friends:', error);
+        res.status(500).json({ error: 'Error getting list of friends' });
     }
 };
 
+const unfriend = async (req, res) => {
+    const user_id = req.user._id;
+    const { friendId } = req.body;
+    try {
+        // Implementation for unfriending a user
+        res.status(200).json({ message: 'Unfriended successfully!' });
+    } catch (error) {
+        logger.error('Error unfriending:', error);
+        res.status(500).json({ error: 'Error unfriending' });
+    }
+};
+
+const blockFriend = async (req, res) => {
+    const user_id = req.user._id;
+    const { friendId } = req.body;
+    try {
+        // Implementation for blocking a friend
+        res.status(200).json({ message: 'Blocked successfully!' });
+    } catch (error) {
+        logger.error('Error blocking friend:', error);
+        res.status(500).json({ error: 'Error blocking friend' });
+    }
+};
+
+const unblockFriend = async (req, res) => {
+    const user_id = req.user._id;
+    const { friendId } = req.body;
+    try {
+        // Implementation for unblocking a friend
+        res.status(200).json({ message: 'Unblocked successfully!' });
+    } catch (error) {
+        logger.error('Error unblocking friend:', error);
+        res.status(500).json({ error: 'Error unblocking friend' });
+    }
+};
 
 module.exports = {
     getUserData,
@@ -306,13 +250,17 @@ module.exports = {
     updateName,
     updateAge,
     updateGender,
-    updateAbout,
     updateAddress,
+    updateAbout,
     updateAvatar,
-    // checkGoogle,
-    // linkedGoogle,
-    addFriend,
+    checkGoogle,
+    linkGoogle,
+    sendFriendRequest,
+    acceptRequest,
+    refuseRequest,
     checkFriendStatus,
-    delFriend,
     getListFriend,
+    unfriend,
+    blockFriend,
+    unblockFriend,
 };

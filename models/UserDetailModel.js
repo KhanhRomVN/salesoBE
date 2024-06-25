@@ -1,121 +1,58 @@
 const { getDB } = require('../config/mongoDB');
+const Joi = require('joi');
+const { ObjectId } = require('mongodb');
 
-const COLLECTION_NAME = 'user_detail';
+// Schema validation
+const COLLECTION_NAME = 'user_details';
+const COLLECTION_SCHEMA = Joi.object({
+    user_id: Joi.string().required(),
+    name: Joi.string().optional(),
+    age: Joi.number().integer().min(0).optional(),
+    gender: Joi.string().valid('male', 'female', 'other').optional(),
+    address: Joi.string().optional(),
+    about: Joi.string().optional(),
+    avatar: Joi.string().uri().optional(),
+}).options({ abortEarly: false });
 
-//* Update data detail user
-const updateName = async (user_id, name) => {
-    try {
-        const db = getDB();
-        await db.collection(COLLECTION_NAME).updateOne(
-            { user_id },
-            { $set: { name }}
-        );
-    } catch (error) {
-        console.error("Error updating name: ", error);
-        throw error;
+const validateUserDetail = (userDetailData) => {
+    const validation = COLLECTION_SCHEMA.validate(userDetailData);
+    if (validation.error) {
+        throw new Error(validation.error.details.map(detail => detail.message).join(', '));
     }
 };
 
-const updateAge = async (user_id, age) => {
-    try {
-        const db = getDB();
-        await db.collection(COLLECTION_NAME).updateOne(
-            { user_id },
-            { $set: { age }}
-        );
-    } catch (error) {
-        console.error("Error updating age: ", error);
-        throw error;
-    }
+// UserDetail CRUD operations
+const addUserDetail = async (userDetailData) => {
+    validateUserDetail(userDetailData);
+    const db = getDB();
+    return db.collection(COLLECTION_NAME).insertOne(userDetailData);
 };
 
-const updateGender = async (user_id, gender) => {
-    try {
-        const db = getDB();
-        await db.collection(COLLECTION_NAME).updateOne(
-            { user_id },
-            { $set: { gender }}
-        );
-    } catch (error) {
-        console.error("Error updating gender: ", error);
-        throw error;
-    }
+const getUserDetailByUserId = async (userId) => {
+    const db = getDB();
+    return db.collection(COLLECTION_NAME).findOne({ user_id: new ObjectId(userId) });
 };
 
-const updateAbout = async (user_id, about) => {
-    try {
-        const db = getDB();
-        await db.collection(COLLECTION_NAME).updateOne(
-            { user_id },
-            { $set: { about } }
-        );
-    } catch (error) {
-        console.error("Error updating about: ", error);
-        throw error;
-    }
+const updateUserDetail = async (userId, updateData) => {
+    validateUserDetail(updateData);
+    const db = getDB();
+    return db.collection(COLLECTION_NAME).updateOne({ user_id: new ObjectId(userId) }, { $set: updateData });
 };
 
-const updateAddress = async (user_id, address) => {
-    try {
-        const db = getDB();
-        await db.collection(COLLECTION_NAME).updateOne(
-            { user_id },
-            { $set: { address }}
-        );
-    } catch (error) {
-        console.error("Error updating address: ", error);
-        throw error;
-    }
-};
-
-const updateAvatar = async (user_id, avatar_uri) => {
-    try {
-        const db = getDB();
-        await db.collection(COLLECTION_NAME).updateOne(
-            { user_id },
-            { $set: { avatar_uri }}
-        );
-    } catch (error) {
-        console.error("Error updating avatar: ", error);
-        throw error;
-    }
-};
-
-
-//* Get data user detail
-const getUserDetailByUserId = async (user_id) => {
-    try {
-        const db = getDB();
-        return await db.collection(COLLECTION_NAME).findOne({ user_id });
-    } catch (error) {
-        console.error("Error in getUserDetailByUserId: ", error);
-        throw error;
-    }
-};
-
-const getListFriends = async (user_id) => {
-    try {
-        const db = getDB();
-    
-        const user = await db.collection(COLLECTION_NAME).findOne({ user_id: user_id });
-        if (!user) {
-          throw new Error(`User with ID ${user_id} not found`);
-        }
-    
-        return user.friendList;
-      } catch (error) {
-        console.error("Error in getListFriends: ", error);
-        throw error;
-      }
-};
+const updateName = (userId, { name }) => updateUserDetail(userId, { name });
+const updateAge = (userId, { age }) => updateUserDetail(userId, { age });
+const updateGender = (userId, { gender }) => updateUserDetail(userId, { gender });
+const updateAddress = (userId, { address }) => updateUserDetail(userId, { address });
+const updateAbout = (userId, { about }) => updateUserDetail(userId, { about });
+const updateAvatar = (userId, { avatar }) => updateUserDetail(userId, { avatar });
 
 module.exports = {
+    addUserDetail,
+    getUserDetailByUserId,
     updateName,
     updateAge,
     updateGender,
-    updateAbout,
     updateAddress,
+    updateAbout,
     updateAvatar,
-    getUserDetailByUserId,
-    getListFriends,
 };
