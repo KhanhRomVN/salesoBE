@@ -31,6 +31,7 @@ router.post('/link-google', authToken, userController.linkGoogle);
 
 //* Friend User [ User Detail ]
 router.post('/send-friend-request', authToken, userController.sendFriendRequest);
+router.post('/get-list-friend-request', authToken, userController.getListFriendRequest);
 router.post('/accept', authToken, userController.acceptRequest);
 router.post('/refuse', authToken, userController.refuseRequest);
 router.post('/check-friend-status', authToken, userController.checkFriendStatus);

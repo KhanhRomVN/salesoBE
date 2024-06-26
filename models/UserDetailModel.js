@@ -77,6 +77,21 @@ const sendFriendRequest = async (userId, friendId) => {
     }
 };
 
+const getListFriendRequest = async (userId) => {
+    const db = getDB();
+    try {
+        const userDetail = await db.collection(COLLECTION_NAME).findOne({ _id: new ObjectId(userId) });
+        if (!userDetail) {
+            throw new Error('User not found');
+        }
+        return userDetail.friends_request;
+    } catch (error) {
+        console.error('Error getting list of friend requests:', error);
+        throw new Error('Failed to get list of friend requests');
+    }
+};
+
+
 const acceptFriendRequest = async (userId, friendId) => {
     try {
         const db = getDB();
@@ -222,6 +237,7 @@ module.exports = {
     updateAbout,
     updateAvatar,
     sendFriendRequest,
+    getListFriendRequest,
     acceptFriendRequest,
     refuseFriendRequest,
     checkFriendStatus,

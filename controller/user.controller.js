@@ -3,10 +3,7 @@ const UserDetailModel = require('../models/UserDetailModel');
 const OTPModel = require('../models/OTPModel');
 const logger = require('../config/logger');
 const crypto = require('crypto');
-const bcryptjs = require('bcryptjs');
-const jwt = require('jsonwebtoken');
 const transporter = require('../config/nodemailerConfig');
-const { validationResult } = require('express-validator');
 
 // Utility function to generate OTP
 const generateOTP = () => crypto.randomBytes(3).toString('hex');
@@ -173,6 +170,17 @@ const sendFriendRequest = async (req, res) => {
     }
 };
 
+const getListFriendRequest = async (req, res) => {
+    const user_id = req.user._id;
+    try {
+        const friendRequests = await UserDetailModel.getListFriendRequest(user_id);
+        res.status(200).json({ friendRequests });
+    } catch (error) {
+        logger.error('Error getting list of friend requests:', error);
+        res.status(500).json({ error: 'Error getting list of friend requests' });
+    }
+};
+
 const acceptRequest = async (req, res) => {
     const user_id = req.user._id;
     const { friendId } = req.body;
@@ -273,6 +281,7 @@ module.exports = {
     checkGoogle,
     linkGoogle,
     sendFriendRequest,
+    getListFriendRequest,
     acceptRequest,
     refuseRequest,
     checkFriendStatus,
