@@ -28,10 +28,18 @@ const getUserData = async (req, res) => {
 
         const userDetail = await UserDetailModel.getUserDetailByUserId(user._id);
         if (!userDetail) {
-            res.status(200).json({ userData });
+            const userDataFinal = {
+                ...userData
+            }
+            res.status(200).json(userDataFinal);
         } else {
-            res.status(200).json({ userData, ...userDetail });
+            const userDataFinal = {
+                ...userData,
+                ...userDetail
+            }
+            res.status(200).json(userDataFinal);
         }
+        
     } catch (error) {
         logger.error('Error in getUserData:', error);
         res.status(500).json({ error: 'Error fetching user data' });
