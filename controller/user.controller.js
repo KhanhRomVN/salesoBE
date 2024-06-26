@@ -4,61 +4,60 @@ const OTPModel = require('../models/OTPModel');
 const logger = require('../config/logger');
 const crypto = require('crypto');
 const transporter = require('../config/nodemailerConfig');
-
-// Utility function to generate OTP
 const generateOTP = () => crypto.randomBytes(3).toString('hex');
 
-// User Controller Methods
+//* Get User + User Detail
 const getUserData = async (req, res) => {
     const { username } = req.body;
     try {
         const user = await UserModel.getUserByUsername(username);
         if (!user) {
-            logger.warn(`User with username '${username}' not found`);
             return res.status(404).json({ error: 'User not found' });
         }
 
         const userData = {
             user_id: user._id.toString(),
             username: user.username,
-        }
+        };
 
-        const userDetail = await UserDetailModel.getUserDetailByUserId(user._id);
-        if (!userDetail) {
-            const userDataFinal = {
-                ...userData
-            }
-            res.status(200).json(userDataFinal);
-        } else {
-            const userDataFinal = {
-                ...userData,
-                ...userDetail
-            }
-            res.status(200).json(userDataFinal);
-        }
-        
+        const userDetail = await UserDetailModel.getUserDetailByUserId(user._id.toString());
+        const userDataFinal = userDetail
+            ? { ...userData, ...userDetail }
+            : userData;
+
+        res.status(200).json(userDataFinal);
     } catch (error) {
         logger.error('Error in getUserData:', error);
         res.status(500).json({ error: 'Error fetching user data' });
     }
 };
 
-const updateUserField = async (req, res, updateFunc, successMessage) => {
+//* Update User [username, email, role] & [name, age. gender, about, address, avatar]
+const updateUserField = async (req, res) => {
+    const { field, value } = req.body;
     const user_id = req.user._id;
-    const updateData = req.body;
     try {
-        await updateFunc(user_id, updateData);
-        res.status(200).json({ message: successMessage });
+        await UserModel.updateUserField(user_id, { [field]: value });
+        res.status(200).json({ message: `${field} updated successfully!` });
     } catch (error) {
-        logger.error(`Error updating ${successMessage.toLowerCase()}:`, error);
-        res.status(500).json({ error: `Error updating ${successMessage.toLowerCase()}` });
+        logger.error(`Error updating ${field}:`, error);
+        res.status(500).json({ error: `Error updating ${field}` });
     }
 };
 
-// Define specific update functions for user fields
-const updateUsername = (req, res) => updateUserField(req, res, UserModel.updateUsername, 'Username');
-const updateEmail = (req, res) => updateUserField(req, res, UserModel.updateEmail, 'Email');
-const updateRole = (req, res) => updateUserField(req, res, UserModel.updateRole, 'Role');
+const updateUserDetailField = async (req, res) => {
+    const { field, value } = req.body;
+    const user_id = req.user._id.toString()
+    try {
+        await UserDetailModel.updateUserDetailField(user_id, { [field]: value });
+        res.status(200).json({ message: `${field} updated successfully!` });
+    } catch (error) {
+        logger.error(`Error updating ${field}:`, error);
+        res.status(500).json({ error: `Error updating ${field}` });
+    }
+};
+
+//* Update Password
 const updatePassword = async (req, res) => {
     const { currentPassword, newPassword } = req.body;
     const user_id = req.user._id;
@@ -72,11 +71,11 @@ const updatePassword = async (req, res) => {
 };
 
 const forgetPassword = async (req, res) => {
+    const user_id = req.user._id;
     const { email } = req.body;
     try {
-        const user = await UserModel.getUserByEmail(email);
+        const user = await UserModel.getUserById(user_id);
         if (!user) {
-            logger.warn(`User with email '${email}' not found`);
             return res.status(404).json({ error: 'User not found' });
         }
 
@@ -103,13 +102,11 @@ const updateForgetPassword = async (req, res) => {
     try {
         const validOTP = await OTPModel.verifyOTP(email, otp);
         if (!validOTP) {
-            logger.warn(`Invalid OTP for email: ${email}`);
             return res.status(400).json({ error: 'Invalid OTP' });
         }
 
         const user = await UserModel.getUserByEmail(email);
         if (!user) {
-            logger.warn(`User with email '${email}' not found`);
             return res.status(404).json({ error: 'User not found' });
         }
 
@@ -121,30 +118,20 @@ const updateForgetPassword = async (req, res) => {
     }
 };
 
-// User Detail Methods
-const updateName = (req, res) => updateUserField(req, res, UserDetailModel.updateName, 'Name');
-const updateAge = (req, res) => updateUserField(req, res, UserDetailModel.updateAge, 'Age');
-const updateGender = (req, res) => updateUserField(req, res, UserDetailModel.updateGender, 'Gender');
-const updateAddress = (req, res) => updateUserField(req, res, UserDetailModel.updateAddress, 'Address');
-const updateAbout = (req, res) => updateUserField(req, res, UserDetailModel.updateAbout, 'About');
-const updateAvatar = (req, res) => updateUserField(req, res, UserDetailModel.updateAvatar, 'Avatar');
-
-// Google Account Methods
+//* Google Account
 const checkGoogle = async (req, res) => {
     const user_id = req.user._id;
     try {
         const user = await UserModel.getUserById(user_id);
-        if (user.oauth && user.oauth.google && user.oauth.google.gg_id) {
-            res.status(200).json({ googleLinked: true });
-        } else {
-            res.status(200).json({ googleLinked: false });
-        }
+        const googleLinked = user?.oauth?.google?.gg_id ? true : false;
+        res.status(200).json({ googleLinked });
     } catch (error) {
         logger.error('Error checking Google account:', error);
         res.status(500).json({ error: 'Error checking Google account' });
     }
 };
 
+// Todo: chưa làm xong đâu
 const linkGoogle = async (req, res) => {
     const user_id = req.user._id;
     const { googleAccount } = req.body;
@@ -157,12 +144,12 @@ const linkGoogle = async (req, res) => {
     }
 };
 
-// Friend Methods
-const sendFriendRequest = async (req, res) => {
-    const user_id = req.user._id;
-    const { friendId } = req.body;
+//* Friend User [ User Detail ]
+const friendRequest = async (req, res) => {
+    const user_id = req.user._id.toString()
+    const { friend_id } = req.body;
     try {
-        await UserDetailModel.sendFriendRequest(user_id, friendId);
+        await UserDetailModel.sendFriendRequest(user_id, friend_id);
         res.status(200).json({ message: 'Friend request sent successfully!' });
     } catch (error) {
         logger.error('Error sending friend request:', error);
@@ -170,47 +157,45 @@ const sendFriendRequest = async (req, res) => {
     }
 };
 
+const friendActions = async (req, res) => {
+    const user_id = req.user._id.toString()
+    const { action, friend_id } = req.body;
+    try {
+        switch (action) {
+            case 'accept':
+                await UserDetailModel.acceptFriendRequest(user_id, friend_id);
+                res.status(200).json({ message: 'Friend request accepted successfully!' });
+                break;
+            case 'refuse':
+                await UserDetailModel.rejectFriendRequest(user_id, friend_id);
+                res.status(200).json({ message: 'Friend request refused successfully!' });
+                break;
+            default:
+                res.status(400).json({ error: 'Invalid action' });
+        }
+    } catch (error) {
+        logger.error(`Error ${action}ing friend request:`, error);
+        res.status(500).json({ error: `Error ${action}ing friend request` });
+    }
+};
+
 const getListFriendRequest = async (req, res) => {
-    const user_id = req.user._id;
+    const user_id = req.user._id.toString();
     try {
-        const friendRequests = await UserDetailModel.getListFriendRequest(user_id);
-        res.status(200).json({ friendRequests });
+        const friendRequest = await UserDetailModel.getListFriendRequest(user_id)
+        res.status(200).json(friendRequest);
     } catch (error) {
-        logger.error('Error getting list of friend requests:', error);
-        res.status(500).json({ error: 'Error getting list of friend requests' });
+        logger.error(`Error getListFriendRequest:`, error);
+        res.status(500).json({ error: `Error getListFriendRequest` });
     }
-};
-
-const acceptRequest = async (req, res) => {
-    const user_id = req.user._id;
-    const { friendId } = req.body;
-    try {
-        await UserDetailModel.acceptFriendRequest(user_id, friendId);
-        res.status(200).json({ message: 'Friend request accepted successfully!' });
-    } catch (error) {
-        logger.error('Error accepting friend request:', error);
-        res.status(500).json({ error: 'Error accepting friend request' });
-    }
-};
-
-const refuseRequest = async (req, res) => {
-    const user_id = req.user._id;
-    const { friendId } = req.body;
-    try {
-        await UserDetailModel.refuseFriendRequest(user_id, friendId);
-        res.status(200).json({ message: 'Friend request refused successfully!' });
-    } catch (error) {
-        logger.error('Error refusing friend request:', error);
-        res.status(500).json({ error: 'Error refusing friend request' });
-    }
-};
+}
 
 const checkFriendStatus = async (req, res) => {
-    const user_id = req.user._id;
-    const { friendId } = req.query;
+    const user_id = req.user._id.toString();
+    const { friend_id } = req.body;
     try {
-        const status = await UserDetailModel.checkFriendStatus(user_id, friendId);
-        res.status(200).json({ friendStatus: status });
+        const status = await UserDetailModel.checkFriendStatus(user_id, friend_id);
+        res.status(200).json(status);
     } catch (error) {
         logger.error('Error checking friend status:', error);
         res.status(500).json({ error: 'Error checking friend status' });
@@ -218,33 +203,21 @@ const checkFriendStatus = async (req, res) => {
 };
 
 const getListFriend = async (req, res) => {
-    const user_id = req.user._id;
+    const user_id = req.user._id.toString();
     try {
-        const friends = await UserDetailModel.getListFriends(user_id);
-        res.status(200).json({ friends });
+        const friends = await UserDetailModel.getListFriend(user_id);
+        res.status(200).json(friends);
     } catch (error) {
-        logger.error('Error getting list of friends:', error);
-        res.status(500).json({ error: 'Error getting list of friends' });
-    }
-};
-
-const unfriend = async (req, res) => {
-    const user_id = req.user._id;
-    const { friendId } = req.body;
-    try {
-        await UserDetailModel.unfriend(user_id, friendId);
-        res.status(200).json({ message: 'Unfriended successfully!' });
-    } catch (error) {
-        logger.error('Error unfriending:', error);
-        res.status(500).json({ error: 'Error unfriending' });
+        logger.error('Error getting friend list:', error);
+        res.status(500).json({ error: 'Error getting friend list' });
     }
 };
 
 const blockFriend = async (req, res) => {
-    const user_id = req.user._id;
-    const { friendId } = req.body;
+    const user_id = req.user._id.toString();
+    const { friend_id } = req.body;
     try {
-        await UserDetailModel.blockFriend(user_id, friendId);
+        await UserDetailModel.blockFriend(user_id, friend_id);
         res.status(200).json({ message: 'Blocked successfully!' });
     } catch (error) {
         logger.error('Error blocking friend:', error);
@@ -253,10 +226,10 @@ const blockFriend = async (req, res) => {
 };
 
 const unblockFriend = async (req, res) => {
-    const user_id = req.user._id;
-    const { friendId } = req.body;
+    const user_id = req.user._id.toString();
+    const { friend_id } = req.body;
     try {
-        await UserDetailModel.unblockFriend(user_id, friendId);
+        await UserDetailModel.unblockFriend(user_id, friend_id);
         res.status(200).json({ message: 'Unblocked successfully!' });
     } catch (error) {
         logger.error('Error unblocking friend:', error);
@@ -264,29 +237,32 @@ const unblockFriend = async (req, res) => {
     }
 };
 
+const getListBlockFriend = async (req, res) => {
+    const user_id = req.user._id.toString();
+    try {
+        const blockedFriends = await UserDetailModel.getListBlockFriend(user_id);
+        res.status(200).json(blockedFriends);
+    } catch (error) {
+        logger.error('Error getting blocked friend list:', error);
+        res.status(500).json({ error: 'Error getting blocked friend list' });
+    }
+};
+
 module.exports = {
     getUserData,
-    updateUsername,
-    updateEmail,
-    updateRole,
+    updateUserField,
+    updateUserDetailField,
     updatePassword,
     forgetPassword,
     updateForgetPassword,
-    updateName,
-    updateAge,
-    updateGender,
-    updateAddress,
-    updateAbout,
-    updateAvatar,
     checkGoogle,
     linkGoogle,
-    sendFriendRequest,
+    friendRequest,
+    friendActions,
     getListFriendRequest,
-    acceptRequest,
-    refuseRequest,
     checkFriendStatus,
     getListFriend,
-    unfriend,
+    getListBlockFriend,
     blockFriend,
     unblockFriend,
 };

@@ -22,7 +22,6 @@ const COLLECTION_SCHEMA = Joi.object({
         }).optional(),
     }).optional()
 }).options({ abortEarly: false });
-
 const validateUser = (userData) => {
     const validation = COLLECTION_SCHEMA.validate(userData);
     if (validation.error) {
@@ -30,11 +29,18 @@ const validateUser = (userData) => {
     }
 };
 
-// User CRUD operations
-const addUser = async (userData) => {
-    validateUser(userData);
+//* Auth
+const registerUser = async (email, userData) => {
     const db = getDB();
-    return db.collection(COLLECTION_NAME).insertOne(userData);
+    try {
+        await db.collection(COLLECTION_NAME).updateOne(
+            { email: email },
+            { $set: userData },
+            { upsert: true } // Ensure user is added if not exists
+        );
+    } catch (error) {
+        throw new Error('Failed to add user: ' + error.message);
+    }
 };
 
 const confirmEmail = async (email) => {
@@ -57,6 +63,7 @@ const logoutUser = async (userId, updateData) => {
     return db.collection(COLLECTION_NAME).updateOne({ _id: new ObjectId(userId) }, { $set: updateData });
 };
 
+//* Get User Data
 const getUserById = async (userId) => {
     const db = getDB();
     return db.collection(COLLECTION_NAME).findOne({ _id: new ObjectId(userId) });
@@ -72,55 +79,56 @@ const getUserByEmail = async (email) => {
     return db.collection(COLLECTION_NAME).findOne({ email });
 };
 
-const updateUser = async (userId, updateData) => {
-    validateUser(updateData);
-    const db = getDB();
-    return db.collection(COLLECTION_NAME).updateOne({ _id: new ObjectId(userId) }, { $set: updateData, $currentDate: { update_at: true } });
-};
-
-const updateUsername = (userId, { username }) => updateUser(userId, { username });
-const updateEmail = (userId, { email }) => updateUser(userId, { email });
-const updateRole = (userId, { role }) => updateUser(userId, { role });
-const updatePassword = async (userId, currentPassword, newPassword) => {
-    const db = getDB();
-    const user = await db.collection(COLLECTION_NAME).findOne({ _id: new ObjectId(userId) });
-
-    if (!await bcrypt.compare(currentPassword, user.password)) {
-        throw new Error('Incorrect current password');
-    }
-
-    const hashedNewPassword = await bcrypt.hash(newPassword, saltRounds);
-    return updateUser(userId, { password: hashedNewPassword });
-};
-
-const updateForgetPassword = async (userId, newPassword) => {
-    const hashedNewPassword = await bcrypt.hash(newPassword, saltRounds);
-    return updateUser(userId, { password: hashedNewPassword });
-};
-
-// Google Auth specific methods
 const getUserByGoogleId = async (googleId) => {
     const db = getDB();
     return db.collection(COLLECTION_NAME).findOne({ 'oauth.google.gg_id': googleId });
 };
 
+//* Update Data User [username, email, role]
+const updateUserField = async (user_id, updateData) => {
+    const db = getDB();
+    try {
+        db.collection(COLLECTION_NAME).updateOne({ _id: new ObjectId(user_id) }, { $set: updateData, $currentDate: { update_at: true } })
+    } catch (error) {
+        
+    }
+}
+
+//* Update Password
+const updatePassword = async (user_id, currentPassword, newPassword) => {
+    const db = getDB();
+    const user = await db.collection(COLLECTION_NAME).findOne({ _id: user_id });
+    if (!await bcrypt.compare(currentPassword, user.password)) {
+        throw new Error('Incorrect current password');
+    }
+
+    const hashedNewPassword = await bcrypt.hash(newPassword, saltRounds);
+    await db.collection(COLLECTION_NAME).updateOne({ _id: user_id }, { $set: {password: hashedNewPassword} });
+};
+
+const updateForgetPassword = async (user_id, newPassword) => {
+    const db = getDB();
+    const hashedNewPassword = await bcrypt.hash(newPassword, saltRounds);
+    await db.collection(COLLECTION_NAME).updateOne({ _id: user_id }, { $set: {password: hashedNewPassword} });
+};
+
+//* Google Linked
+// Todo: Chưa code xong
 const linkGoogleAccount = async (userId, googleAccount) => {
     const db = getDB();
     return db.collection(COLLECTION_NAME).updateOne({ _id: new ObjectId(userId) }, { $set: { 'oauth.google': googleAccount } });
 };
 
 module.exports = {
-    addUser,
+    registerUser,
     confirmEmail,
     addGoogleUser,
     updateRefreshToken,
     logoutUser,
     getUserById,
     getUserByUsername,
+    updateUserField,
     getUserByEmail,
-    updateUsername,
-    updateEmail,
-    updateRole,
     updatePassword,
     updateForgetPassword,
     getUserByGoogleId,

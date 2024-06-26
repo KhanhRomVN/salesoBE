@@ -6,8 +6,6 @@ const OTPModel = require('../models/OTPModel');
 const crypto = require('crypto');
 const userDetailModel = require('../models/UserDetailModel');
 const logger = require('../config/logger');
-const notificationController = require('../controller/notification.controller')
-const notificationModel = require('../models/NotificationModel');
 
 const generateOTP = () => crypto.randomBytes(3).toString('hex');
 
@@ -66,30 +64,23 @@ const registerUser = async (req, res) => {
             return res.status(400).json({ error: 'You can not register because you do not verify your email' });
         }
 
-        if (existingUser.emailConfirmed === 'false') {
-            logger.warn(`Attempt to register with unverified email: ${email}`);
-            return res.status(400).json({ error: 'You can not register because you do not verify your email' });
-        }
-
         const hashedPassword = await bcryptjs.hash(password, 10);
-        const newUser = {
+        const userData = {
             username,
-            email,
             password: hashedPassword,
             role: 'customer',
             register_at: new Date()
         };
 
-        await UserModel.addUser(newUser);
+        await UserModel.registerUser(email, userData);
         const user_id = existingUser._id.toString()
-        //* Create Notification For Basic Register
-        const notification = {
-            user_id: user_id,
-            message: "Create basic account successfully",
-            type: 'authentication',
-            status: 'unread'
+        const userDetailData = {
+            user_id,
+            friends_request : [],
+            friends: [],
+            blocklist: []
         }
-        await notificationModel.createNotification(notification)
+        await userDetailModel.addUserDetail(userDetailData)
         logger.info(`User registered successfully: ${username}`);
         res.status(201).json({ message: 'User registered successfully' });
     } catch (error) {
@@ -101,15 +92,16 @@ const registerUser = async (req, res) => {
 //* --------------- Login ----------------------
 const loginUser = async (req, res) => {
     try {
-        logger.info('Handling request for loginUser');
         const { email, password } = req.body;
         const user = await UserModel.getUserByEmail(email);
         if (!user) {
             logger.warn(`Invalid email attempted: ${email}`);
             return res.status(401).json({ error: 'Invalid email' });
         }
+        console.log(user);
 
         const isPasswordValid = await bcryptjs.compare(password, user.password);
+        console.log(isPasswordValid);
         if (!isPasswordValid) {
             logger.warn(`Invalid password attempted for email: ${email}`);
             return res.status(401).json({ error: 'Invalid password' });
@@ -154,13 +146,6 @@ const loginGoogleUser = async (req, res) => {
             };
             await userDetailModel.addUserDetail(newUserDetail);
             user = await UserModel.getUserById(userId);
-            const notification = {
-                user_id: userId.toString(),
-                message: 'Create google account successfully',
-                type: 'authentication',
-                status: 'unread'
-            }
-            await notificationModel.createNotification(notification)
         }
         const accessToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET_KEY, { expiresIn: '1d' });
         const refreshToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET_KEY, { expiresIn: '7d' });
