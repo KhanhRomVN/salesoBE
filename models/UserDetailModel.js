@@ -138,7 +138,7 @@ const getListFriends = async (userId) => {
             try {
                 const friendData = await UserModel.getUserById(friendId);
                 if (friendData) {
-                    listFriendData.push(friendData.username); 
+                    listFriendData.push({user_id: friendData._id, username: friendData.username}); 
                 }
             } catch (error) {
                 console.error(`Error fetching friend with ID ${friendId}:`, error);

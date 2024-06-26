@@ -5,7 +5,7 @@ const userController = require('../controller/user.controller');
 const router = express.Router();
 
 //* Get User + User Detail
-router.post('/get-user-data', userController.getUserData);
+router.get('/get-user-data', userController.getUserData);
 
 //* Update User
 router.post('/update-username', authToken, userController.updateUsername);
