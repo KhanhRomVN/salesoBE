@@ -7,14 +7,14 @@ const router = express.Router()
 router.post('/add-review', authToken, reviewController.addReview)
 
 //* Get Review
-router.get('/get-product-reviews', reviewController.getProductReviews)
-router.get('/get-user-reviews', reviewController.getUserReviews)
+router.post('/get-product-reviews', reviewController.getProductReviews)
+router.post('/get-user-reviews', reviewController.getUserReviews)
 
 //* Update Review
 router.post('/update-comment', authToken, reviewController.updateComment)
 router.post('/update-rate', authToken, reviewController.updateRate)
 
 //* Delete Review (For Customer)
-router.delete('/del-review', authToken, reviewController.delReview)
+router.post('/del-review', authToken, reviewController.delReview)
 
 module.exports = router

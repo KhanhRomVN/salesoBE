@@ -4,15 +4,15 @@ const notificationController = require('../controller/notification.controller');
 const router = express.Router();
 
 //* Get Notification
-router.get('/user_notify', authToken, notificationController.getNotifications);
+router.post('/user_notify', authToken, notificationController.getNotifications);
 
 //* Add Notification
 router.post('/notify-create', authToken, notificationController.createNotification);
 
 //* Del Notification
-router.delete('/delete', authToken, notificationController.deleteNotification);
+router.post('/delete', authToken, notificationController.deleteNotification);
 
 //* Read Notification
-router.put('/mark-as-read', authToken, notificationController.markAsRead);
+router.post('/mark-as-read', authToken, notificationController.markAsRead);
 
 module.exports = router;

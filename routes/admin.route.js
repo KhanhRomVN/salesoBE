@@ -5,8 +5,7 @@ const adminController = require('../controller/admin.controller');
 const router = express.Router();
 
 //* Get all user from collection 'users'
-router.get('/get-all-users', authAdminToken, adminController.getAllUsers);
-
+router.post('/get-all-users', authAdminToken, adminController.getAllUsers);
 //! Get all products from collection 'products'
 
 module.exports = router;

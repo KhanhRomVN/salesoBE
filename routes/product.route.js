@@ -7,10 +7,10 @@ const router = express.Router()
 router.post('/add-product', authToken, productController.addProduct)
 
 //* Get Product
-router.get('/get-product', productController.getProductByProductId)
-router.get('/get-products', authToken, productController.getListOfProductByUserId)
-router.get('/get-type-products', productController.getListOfProductByCategory)
-router.get('/get-all-products', productController.getAllProducts)
+router.post('/get-product', productController.getProductByProductId)
+router.post('/get-products', authToken, productController.getListOfProductByUserId)
+router.post('/get-type-products', productController.getListOfProductByCategory)
+router.post('/get-all-products', productController.getAllProducts)
 
 //* Update Product
 router.post('/update-name', productController.updateName)

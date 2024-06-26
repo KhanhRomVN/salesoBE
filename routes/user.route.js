@@ -5,7 +5,7 @@ const userController = require('../controller/user.controller');
 const router = express.Router();
 
 //* Get User + User Detail
-router.get('/get-user-data', userController.getUserData);
+router.post('/get-user-data', userController.getUserData);
 
 //* Update User
 router.post('/update-username', authToken, userController.updateUsername);
@@ -33,8 +33,8 @@ router.post('/link-google', authToken, userController.linkGoogle);
 router.post('/send-friend-request', authToken, userController.sendFriendRequest);
 router.post('/accept', authToken, userController.acceptRequest);
 router.post('/refuse', authToken, userController.refuseRequest);
-router.get('/check-friend-status', authToken, userController.checkFriendStatus);
-router.get('/get-list-friend', authToken, userController.getListFriend);
+router.post('/check-friend-status', authToken, userController.checkFriendStatus);
+router.post('/get-list-friend', authToken, userController.getListFriend);
 router.post('/unfriend', authToken, userController.unfriend);
 
 //* Block Friend
