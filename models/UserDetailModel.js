@@ -77,19 +77,34 @@ const sendFriendRequest = async (userId, friendId) => {
     }
 };
 
-const getListFriendRequest = async (userId) => {
+const getListFriendRequest = async (user_id) => {
     const db = getDB();
     try {
-        const userDetail = await db.collection(COLLECTION_NAME).findOne({ _id: new ObjectId(userId) });
+        const userDetail = await db.collection(COLLECTION_NAME).findOne({ _id: new ObjectId(user_id) });
         if (!userDetail) {
             throw new Error('User not found');
         }
-        return userDetail.friends_request;
+
+        const friendRequests = userDetail.friends_request;
+        const friendRequestDetails = [];
+
+        for (const friendId of friendRequests) {
+            const friendData = await UserModel.getUserById(friendId);
+            if (friendData) {
+                friendRequestDetails.push({
+                    user_id: friendData._id,
+                    username: friendData.username,
+                });
+            }
+        }
+
+        return friendRequestDetails;
     } catch (error) {
         console.error('Error getting list of friend requests:', error);
         throw new Error('Failed to get list of friend requests');
     }
 };
+
 
 
 const acceptFriendRequest = async (userId, friendId) => {
