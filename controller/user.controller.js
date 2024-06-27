@@ -18,6 +18,8 @@ const getUserData = async (req, res) => {
         const userData = {
             user_id: user._id.toString(),
             username: user.username,
+            email: user.email,
+            role: user.role
         };
 
         const userDetail = await UserDetailModel.getUserDetailByUserId(user._id.toString());

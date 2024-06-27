@@ -8,7 +8,6 @@ const COLLECTION_SCHEMA = Joi.object({
 }).options({ abortEarly: false });
 
 const addCart = async (user_id, prod_id) => {
-    console.log(user_id, prod_id);
     const db = getDB();
     try {
         const collection = db.collection(COLLECTION_NAME);

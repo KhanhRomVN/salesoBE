@@ -37,55 +37,53 @@ const emailVerify = async (req, res) => {
     }
 };
 
-const verifyEmailOTP = async (req, res) => {
-    const { email, otp } = req.body;
+const registerUserWithOTP = async (req, res) => {
+    const { email, otp, username, password } = req.body;
     try {
         const validOTP = await OTPModel.verifyOTP(email, otp);
         if (!validOTP) {
             logger.warn(`Invalid OTP for email: ${email}`);
-            return res.status(400).json({ error: 'Invalid OTP' });
+            return res.status(400).json({ error: 'Invalid or expired OTP' });
         }
 
-        await UserModel.confirmEmail(email);
-        logger.info(`Email verified for: ${email}`);
-        res.status(200).json({ message: 'Email verified, you can now register' });
-    } catch (error) {
-        logger.error('Verify OTP Email Failed:', error);
-        res.status(500).json({ error: 'Verify OTP Email Failed' });
-    }
-};
+        const existingEmail = await UserModel.getUserByEmail(email);
+        const existingUsername = await UserModel.getUserByUsername(username);
+        if (existingEmail) {
+            logger.warn(`Unable to register because email already exists: ${email}`);
+            return res.status(400).json({ error: 'You cannot register because the email already exists' });
+        }
 
-const registerUser = async (req, res) => {
-    const { username, email, password } = req.body;
-    try {
-        const existingUser = await UserModel.getUserByEmail(email);
-        if (!existingUser) {
-            logger.warn(`Attempt to register without verifying email: ${email}`);
-            return res.status(400).json({ error: 'You can not register because you do not verify your email' });
+        if (existingUsername) {
+            logger.warn(`Unable to register because username already exists: ${username}`);
+            return res.status(400).json({ error: 'You cannot register because the username already exists' });
         }
 
         const hashedPassword = await bcryptjs.hash(password, 10);
         const userData = {
             username,
+            email,
+            emailConfirmed: 'true',
             password: hashedPassword,
             role: 'customer',
             register_at: new Date()
         };
 
         await UserModel.registerUser(email, userData);
-        const user_id = existingUser._id.toString()
+        const user = await UserModel.getUserByEmail(email);
+        const user_id = user._id.toString();
         const userDetailData = {
             user_id,
-            friends_request : [],
+            friends_request: [],
             friends: [],
             blocklist: []
-        }
-        await userDetailModel.addUserDetail(userDetailData)
+        };
+
+        await userDetailModel.addUserDetail(userDetailData);
         logger.info(`User registered successfully: ${username}`);
         res.status(201).json({ message: 'User registered successfully' });
     } catch (error) {
-        logger.error('Register User Error:', error);
-        res.status(500).json({ error: 'Register User Error' });
+        logger.error('Register User with OTP Failed:', error);
+        res.status(500).json({ error: 'Register User with OTP Failed' });
     }
 };
 
@@ -98,10 +96,7 @@ const loginUser = async (req, res) => {
             logger.warn(`Invalid email attempted: ${email}`);
             return res.status(401).json({ error: 'Invalid email' });
         }
-        console.log(user);
-
         const isPasswordValid = await bcryptjs.compare(password, user.password);
-        console.log(isPasswordValid);
         if (!isPasswordValid) {
             logger.warn(`Invalid password attempted for email: ${email}`);
             return res.status(401).json({ error: 'Invalid password' });
@@ -183,8 +178,7 @@ const logoutUser = async (req, res) => {
 
 module.exports = {
     emailVerify,
-    registerUser,
-    verifyEmailOTP,
+    registerUserWithOTP,
     loginUser,
     loginGoogleUser,
     logoutUser

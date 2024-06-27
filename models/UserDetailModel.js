@@ -60,7 +60,7 @@ const updateUserDetailField = async (user_id, updateData) => {
 const sendFriendRequest = async (user_id, friend_id) => {
     try {
         const db = getDB();
-        const userDetail = await db.collection(COLLECTION_NAME).findOne({ user_id: user_id });
+        const userDetail = await db.collection(COLLECTION_NAME).findOne({ user_id: friend_id });
 
         if (!userDetail) {
             throw new Error('User not found');
@@ -75,8 +75,8 @@ const sendFriendRequest = async (user_id, friend_id) => {
         }
 
         await db.collection(COLLECTION_NAME).updateOne(
-            { user_id: user_id },
-            { $addToSet: { friends_request: friend_id } }
+            { user_id: friend_id },
+            { $addToSet: { friends_request: user_id } }
         );
 
         return { message: 'Friend request sent successfully!' };
@@ -89,7 +89,6 @@ const sendFriendRequest = async (user_id, friend_id) => {
 const acceptFriendRequest = async (user_id, friend_id) => {
     try {
         const db = getDB();
-        console.log(user_id);
         const userDetail = await db.collection(COLLECTION_NAME).findOne({ user_id: user_id });
 
         if (!userDetail) {
