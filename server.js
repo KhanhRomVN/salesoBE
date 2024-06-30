@@ -25,7 +25,9 @@ const productRoute = require('./routes/product.route');
 const reviewRoute = require('./routes/review.route')
 const chatRoute = require('./routes/chat.route');
 const cartRoute = require('./routes/cart.route');
+const postRoute = require('./routes/post.route')
 const notificationRoute = require('./routes/notification.route');
+const commentRoute = require('./routes/comment.route')
 
 const corsOptions = {
   origin: function (origin, callback) {
@@ -63,6 +65,8 @@ app.use('/review', reviewRoute);
 app.use('/cart', cartRoute);
 app.use('/chat', chatRoute);
 app.use('/notification', notificationRoute);
+app.use('/post', postRoute);
+app.use('/comment', commentRoute);
 
 socketHandler(io);
 
