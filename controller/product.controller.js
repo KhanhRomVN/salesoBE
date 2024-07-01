@@ -88,9 +88,7 @@ const getAllProduct = async (req, res) => {
 
 //* Update Product
 const updateProduct = async (req, res) => {
-    const { _id, name, image, description, price, category } = req.body;
-    const prod_id = _id.toString();
-
+    const { prod_id, name, image, description, price, category } = req.body;
     try {
         const productData = {};
         if (name) productData.name = name;
@@ -110,6 +108,8 @@ const updateProduct = async (req, res) => {
 
 const updateStatus = async (req, res) => {
     const { prod_id, status } = req.body;
+    console.log(prod_id);
+    console.log(status);
     try {
         await ProductModel.updateStatus(prod_id, status);
         logger.info(`Updated status for product: ${prod_id}`);
