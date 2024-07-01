@@ -39,7 +39,7 @@ const addProduct = async (req, res) => {
 }
 
 //* Get Product
-const getProductByProductId = async (req, res) => {
+const getProductByProdId = async (req, res) => {
     const { prod_id } = req.body;
     try {
         const product = await ProductModel.getProductByProdId(prod_id);
@@ -51,10 +51,10 @@ const getProductByProductId = async (req, res) => {
     }
 }
 
-const getListOfProductByUserId = async (req, res) => {
+const getListProductByUserId = async (req, res) => {
     const userId = req.user._id.toString();
     try {
-        const products = await ProductModel.getProductsByUserId(userId);
+        const products = await ProductModel.getListProductByUserId(userId);
         logger.info(`Retrieved products by userId: ${userId}`);
         res.status(200).json({ products });
     } catch (error) {
@@ -63,10 +63,10 @@ const getListOfProductByUserId = async (req, res) => {
     }
 }
 
-const getListOfProductByCategory = async (req, res) => {
+const getListProductByCategory = async (req, res) => {
     const { category } = req.body;
     try {
-        const products = await ProductModel.getProductsByCategory(category);
+        const products = await ProductModel.getListProductByCategory(category);
         logger.info(`Retrieved products by category: ${category}`);
         res.status(200).json({ products });
     } catch (error) {
@@ -75,9 +75,9 @@ const getListOfProductByCategory = async (req, res) => {
     }
 }
 
-const getAllProducts = async (req, res) => {
+const getAllProduct = async (req, res) => {
     try {
-        const allProducts = await ProductModel.getAllProducts();
+        const allProducts = await ProductModel.getAllProduct();
         logger.info('Retrieved all products');
         res.status(200).json(allProducts);
     } catch (error) {
@@ -87,96 +87,50 @@ const getAllProducts = async (req, res) => {
 }
 
 //* Update Product
-const updateName = async (req, res) => {
-    const user_id = req.user._id.toString(); 
-    const { prod_id, name } = req.body;
-    try {
-        await ProductModel.updateName(user_id, prod_id, name);
-        logger.info(`Updated product name: ${prod_id}`);
-        res.status(200).json({ message: "Product name updated successfully" });
-    } catch (error) {
-        logger.error('Error updating product name:', error);
-        res.status(500).json({ error: "Internal Server Error" });
-    }
-}
+const updateProduct = async (req, res) => {
+    const { _id, name, image, description, price, category } = req.body;
+    const prod_id = _id.toString();
 
-const updateImage = async (req, res) => {
-    const user_id = req.user._id.toString(); 
-    const { prod_id, image } = req.body;
     try {
-        await ProductModel.updateImage(user_id, prod_id, image);
-        logger.info(`Updated product image: ${prod_id}`);
-        res.status(200).json({ message: "Product image updated successfully" });
-    } catch (error) {
-        logger.error('Error updating product image:', error);
-        res.status(500).json({ error: "Internal Server Error" });
-    }
-}
+        const productData = {};
+        if (name) productData.name = name;
+        if (image) productData.image = image;
+        if (description) productData.description = description;
+        if (price) productData.price = price;
+        if (category) productData.category = category;
 
-const updateDesc = async (req, res) => {
-    const user_id = req.user._id.toString(); 
-    const { prod_id, description } = req.body;
-    try {
-        await ProductModel.updateDesc(user_id, prod_id, description);
-        logger.info(`Updated product description: ${prod_id}`);
-        res.status(200).json({ message: "Product description updated successfully" });
+        await ProductModel.updateProduct(prod_id, productData);
+        logger.info(`Updated product: ${prod_id}`);
+        res.status(200).json({ message: "Product updated successfully" });
     } catch (error) {
-        logger.error('Error updating product description:', error);
+        logger.error('Error updating product:', error);
         res.status(500).json({ error: "Internal Server Error" });
     }
-}
-
-const updatePrice = async (req, res) => {
-    const user_id = req.user._id.toString(); 
-    const { prod_id, price } = req.body;
-    try {
-        await ProductModel.updatePrice(user_id, prod_id, price);
-        logger.info(`Updated product price: ${prod_id}`);
-        res.status(200).json({ message: "Product price updated successfully" });
-    } catch (error) {
-        logger.error('Error updating product price:', error);
-        res.status(500).json({ error: "Internal Server Error" });
-    }
-}
-
-const updateCategory = async (req, res) => {
-    const user_id = req.user._id.toString(); 
-    const { prod_id, category } = req.body;
-    try {
-        await ProductModel.updateCategory(user_id, prod_id, category);
-        logger.info(`Updated product category: ${prod_id}`);
-        res.status(200).json({ message: "Product category updated successfully" });
-    } catch (error) {
-        logger.error('Error updating product category:', error);
-        res.status(500).json({ error: "Internal Server Error" });
-    }
-}
-
-const updateInventory = async (req, res) => {
-    const user_id = req.user._id.toString(); 
-    const { prod_id, inventory } = req.body;
-    try {
-        await ProductModel.updateInventory(user_id, prod_id, inventory);
-        logger.info(`Updated product inventory: ${prod_id}`);
-        res.status(200).json({ message: "Product inventory updated successfully" });
-    } catch (error) {
-        logger.error('Error updating product inventory:', error);
-        res.status(500).json({ error: "Internal Server Error" });
-    }
-}
+};
 
 const updateStatus = async (req, res) => {
-    const user_id = req.user._id.toString(); 
     const { prod_id, status } = req.body;
     try {
-        await ProductModel.updateStatus(user_id, prod_id, status);
-        logger.info(`Updated product status: ${prod_id}`);
+        await ProductModel.updateStatus(prod_id, status);
+        logger.info(`Updated status for product: ${prod_id}`);
         res.status(200).json({ message: "Product status updated successfully" });
     } catch (error) {
         logger.error('Error updating product status:', error);
         res.status(500).json({ error: "Internal Server Error" });
     }
-}
+};
+
+const updateInventory = async (req, res) => {
+    const { prod_id, inventoryAdd } = req.body;
+    try {
+        await ProductModel.updateInventory(prod_id, inventoryAdd);
+        logger.info(`Updated inventory for product: ${prod_id}`);
+        res.status(200).json({ message: "Product inventory updated successfully" });
+    } catch (error) {
+        logger.error('Error updating product inventory:', error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+};
 
 //* Delete Product
 const deleteProduct = async (req, res) => {
@@ -207,17 +161,13 @@ const deleteListProduct = async (req, res) => {
 
 module.exports = {
     addProduct,
-    getProductByProductId,
-    getListOfProductByCategory,
-    getListOfProductByUserId,
-    getAllProducts,
-    updateName,
-    updateImage,
-    updateDesc,
-    updatePrice,
-    updateCategory,
-    updateInventory,
+    getProductByProdId,
+    getListProductByUserId,
+    getListProductByCategory,
+    getAllProduct,
+    updateProduct,
     updateStatus,
+    updateInventory,
     deleteProduct,
     deleteListProduct
 };

@@ -7,22 +7,18 @@ const router = express.Router()
 router.post('/add-product', authToken, productController.addProduct)
 
 //* Get Product
-router.post('/get-product', productController.getProductByProductId)
-router.post('/get-products', authToken, productController.getListOfProductByUserId)
-router.post('/get-type-products', productController.getListOfProductByCategory)
-router.post('/get-all-products', productController.getAllProducts)
+router.post('/get-product-by-prod-id', productController.getProductByProdId)
+router.post('/get-list-product-by-user-id', authToken, productController.getListProductByUserId)
+router.post('/get-list-product-by-category', productController.getListProductByCategory)
+router.post('/get-all-product', productController.getAllProduct)
 
 //* Update Product
-router.post('/update-name', productController.updateName)
-router.post('/update-image', productController.updateImage)
-router.post('/update-desc', productController.updateDesc)
-router.post('/update-price', productController.updatePrice)
-router.post('/update-category', productController.updateCategory)
-router.post('/update-inventory', productController.updateInventory)
-router.post('/update-status', productController.updateStatus)
+router.post('/update-product', authToken, productController.updateProduct)
+router.post('/update-status', authToken, productController.updateStatus)
+router.post('/add-inventory', authToken, productController.updateInventory)
 
 //* Delete Product
-router.post('/del-product', productController.deleteProduct)
-router.post('/del-list-product', productController.deleteListProduct)
+router.post('/del-product-by-prod-id', authToken, productController.deleteProduct)
+router.post('/del-list-product-by-list-prod-id', authToken, productController.deleteListProduct)
 
 module.exports = router

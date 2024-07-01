@@ -30,28 +30,6 @@ const addProduct = async (productData) => {
 }
 
 //* Get Product
-const getProductsByUserId = async (user_id) => {
-    const db = getDB();
-    try {
-        const products = await db.collection(COLLECTION_NAME).find({ user_id: user_id }).toArray();
-        return products;
-    } catch (error) {
-        console.error("Error in getProductsByUserId: ", error);
-        throw error;
-    }
-}
-
-const getProductsByCategory = async (category) => {
-    const db = getDB();
-    try {
-        const products = await db.collection(COLLECTION_NAME).find({ category: category }).toArray();
-        return products;
-    } catch (error) {
-        console.error("Error in getProductsByCategory: ", error);
-        throw error;
-    }
-}
-
 const getProductByProdId = async (prod_id) => {
     const db = getDB();
     try {
@@ -63,7 +41,29 @@ const getProductByProdId = async (prod_id) => {
     }
 }
 
-const getAllProducts = async () => {
+const getListProductByUserId = async (user_id) => {
+    const db = getDB();
+    try {
+        const products = await db.collection(COLLECTION_NAME).find({ user_id: user_id }).toArray();
+        return products;
+    } catch (error) {
+        console.error("Error in getProductsByUserId: ", error);
+        throw error;
+    }
+}
+
+const getListProductByCategory = async (category) => {
+    const db = getDB();
+    try {
+        const products = await db.collection(COLLECTION_NAME).find({ category: category }).toArray();
+        return products;
+    } catch (error) {
+        console.error("Error in getProductsByCategory: ", error);
+        throw error;
+    }
+}
+
+const getAllProduct = async () => {
     const db = getDB();
     try {
         const allProducts = await db.collection(COLLECTION_NAME).find({}).toArray();
@@ -75,75 +75,44 @@ const getAllProducts = async () => {
 }
 
 //* Update Product
-const updateName = async (user_id, prod_id, name) => {
+const updateProduct = async (prod_id, productData) => {
     const db = getDB();
     try {
-        await db.collection(COLLECTION_NAME).updateOne({ user_id, _id: new ObjectId(prod_id) }, { $set: { name, updatedAt: new Date() } });
+        await db.collection(COLLECTION_NAME).updateOne(
+            { _id: new ObjectId(prod_id) },
+            { $set: { ...productData, updatedAt: new Date() } }
+        );
     } catch (error) {
-        console.error("Error in updateName: ", error);
+        console.error("Error in updateProduct: ", error);
         throw error;
     }
-}
+};
 
-const updateImage = async (user_id, prod_id, image) => {
+const updateStatus = async (prod_id, status) => {
     const db = getDB();
     try {
-        await db.collection(COLLECTION_NAME).updateOne({ user_id, _id: new ObjectId(prod_id) }, { $set: { image, updatedAt: new Date() } });
-    } catch (error) {
-        console.error("Error in updateImage: ", error);
-        throw error;
-    }
-}
-
-const updateDesc = async (user_id, prod_id, description) => {
-    const db = getDB();
-    try {
-        await db.collection(COLLECTION_NAME).updateOne({ user_id, _id: new ObjectId(prod_id) }, { $set: { description, updatedAt: new Date() } });
-    } catch (error) {
-        console.error("Error in updateDesc: ", error);
-        throw error;
-    }
-}
-
-const updatePrice = async (user_id, prod_id, price) => {
-    const db = getDB();
-    try {
-        await db.collection(COLLECTION_NAME).updateOne({ user_id, _id: new ObjectId(prod_id) }, { $set: { price, updatedAt: new Date() } });
-    } catch (error) {
-        console.error("Error in updatePrice: ", error);
-        throw error;
-    }
-}
-
-const updateCategory = async (user_id, prod_id, category) => {
-    const db = getDB();
-    try {
-        await db.collection(COLLECTION_NAME).updateOne({ user_id, _id: new ObjectId(prod_id) }, { $set: { category, updatedAt: new Date() } });
-    } catch (error) {
-        console.error("Error in updateCategory: ", error);
-        throw error;
-    }
-}
-
-const updateInventory = async (user_id, prod_id, inventory) => {
-    const db = getDB();
-    try {
-        await db.collection(COLLECTION_NAME).updateOne({ user_id, _id: new ObjectId(prod_id) }, { $set: { inventory, updatedAt: new Date() } });
-    } catch (error) {
-        console.error("Error in updateInventory: ", error);
-        throw error;
-    }
-}
-
-const updateStatus = async (user_id, prod_id, status) => {
-    const db = getDB();
-    try {
-        await db.collection(COLLECTION_NAME).updateOne({ user_id, _id: new ObjectId(prod_id) }, { $set: { is_active: status, updatedAt: new Date() } });
+        await db.collection(COLLECTION_NAME).updateOne(
+            { _id: new ObjectId(prod_id) },
+            { $set: { is_active: status, updatedAt: new Date() } }
+        );
     } catch (error) {
         console.error("Error in updateStatus: ", error);
         throw error;
     }
-}
+};
+
+const updateInventory = async (prod_id, inventoryAdd) => {
+    const db = getDB();
+    try {
+        await db.collection(COLLECTION_NAME).updateOne(
+            { _id: new ObjectId(prod_id) },
+            { $inc: { inventory: inventoryAdd }, $set: { updatedAt: new Date() } }
+        );
+    } catch (error) {
+        console.error("Error in updateInventory: ", error);
+        throw error;
+    }
+};
 
 //* Delete Product
 const deleteProduct = async (user_id, prod_id) => {
@@ -169,17 +138,13 @@ const deleteListProduct = async (user_id, list_prod_id) => {
 
 module.exports = {
     addProduct,
-    getProductsByUserId,
-    getProductsByCategory,
     getProductByProdId,
-    getAllProducts,
-    updateName,
-    updateImage,
-    updateDesc,
-    updatePrice,
-    updateCategory,
-    updateInventory,
+    getListProductByUserId,
+    getListProductByCategory,
+    getAllProduct,
+    updateProduct,
     updateStatus,
+    updateInventory,
     deleteProduct,
     deleteListProduct
 };
